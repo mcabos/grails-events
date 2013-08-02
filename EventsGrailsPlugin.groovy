@@ -17,11 +17,18 @@ import org.grails.plugins.events.reactor.promise.ReactorPromiseFactory
  * limitations under the License.
  */
 
-class GrailsEventsGrailsPlugin {
-	def version = "1.0.0.M1"
+class EventsGrailsPlugin {
+	def version = "1.0.0.BUILD-SNAPSHOT"
 	def grailsVersion = "2.2 > *"
+
 	def pluginExcludes = [
 			"grails-app/views",
+			"grails-app/controllers",
+			"grails-app/services",
+			"grails-app/i18n",
+			"grails-app/domain",
+			"grails-app/taglib",
+			"grails-app/utils",
 			"web-app",
 			"lib",
 			"scripts",

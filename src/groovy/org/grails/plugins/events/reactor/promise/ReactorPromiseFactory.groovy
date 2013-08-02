@@ -22,6 +22,8 @@ import org.grails.async.factory.AbstractPromiseFactory
 import reactor.core.Environment
 import reactor.core.composable.spec.Promises
 
+import java.util.concurrent.TimeUnit
+
 /**
  * Reactor Implementation of {@link grails.async.PromiseFactory} interface
  *
@@ -60,10 +62,15 @@ class ReactorPromiseFactory extends AbstractPromiseFactory {
 
 	@Override
 	def <T> List<T> waitAll(List<Promise<T>> promises) {
+		waitAll(promises, -1, TimeUnit.SECONDS)
+	}
+
+	@Override
+	def <T> List<T> waitAll(List<Promise<T>> promises, long timeout, TimeUnit units) {
 		final List<reactor.core.composable.Promise<T>> _promises = promises.collect {
 			ReactorPromise it -> it.internalPromise
 		}
-		(List<T>) Promises.when(_promises).await()
+		(List<T>) Promises.when(_promises).await(timeout, units)
 	}
 
 	@Override

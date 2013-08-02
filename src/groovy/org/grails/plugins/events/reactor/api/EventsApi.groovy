@@ -15,8 +15,19 @@
  */
 package org.grails.plugins.events.reactor.api
 
+import groovy.transform.CompileStatic
+import reactor.core.Environment
+import reactor.core.Reactor
+import reactor.core.spec.Reactors
 /**
  * @author Stephane Maldini
  */
+@CompileStatic
 class EventsApi {
+
+	Environment env = new Environment()
+
+	Reactor newReactor(Object instance){
+		Reactors.reactor().env(env).get()
+	}
 }

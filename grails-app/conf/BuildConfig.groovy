@@ -40,8 +40,8 @@ grails.project.dependency.resolution = {
 	    mavenLocal()
 	    mavenCentral()
 	    mavenRepo "http://repo.springsource.org/libs-milestone"
-
     }
+
     dependencies {
         // specify dependencies here under either 'build', 'compile', 'runtime', 'test' or 'provided' scopes eg.
         // runtime 'mysql:mysql-connector-java:5.1.24'
@@ -52,7 +52,7 @@ grails.project.dependency.resolution = {
 
     plugins {
         build(
-              ":rest-client-builder:1.0.3") {
+              ":release:3.0.0",":rest-client-builder:1.0.3") {
             export = false
         }
     }

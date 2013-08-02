@@ -38,13 +38,13 @@ import org.grails.plugins.events.reactor.api.EventsApi
 @CompileStatic
 class ReactorTransformer extends AbstractGrailsArtefactTransformer {
 
-	static CONTROLLER_PATTERN =
+	static private CONTROLLER_PATTERN =
 			/.+\/$GrailsResourceUtils.GRAILS_APP_DIR\/controllers\/(.+)Controller\.groovy/
-	static SERVICE_PATTERN =
-			/.+\/$GrailsResourceUtils.GRAILS_APP_DIR\/conf\/(.+)Bootstrap\.groovy/
-	static BOOTSTRAP_PATTERN =
+	static private  SERVICE_PATTERN =
+			/.+\/$GrailsResourceUtils.GRAILS_APP_DIR\/conf\/(.*)BootStrap\.groovy/
+	static private  BOOTSTRAP_PATTERN =
 			/.+\/$GrailsResourceUtils.GRAILS_APP_DIR\/services\/(.+)Service\.groovy/
-	static DOMAIN_PATTERN =
+	static private  DOMAIN_PATTERN =
 			/.+\/$GrailsResourceUtils.GRAILS_APP_DIR\/domain\/(.+)\.groovy/
 
 	@Override
@@ -82,7 +82,7 @@ class ReactorTransformer extends AbstractGrailsArtefactTransformer {
 	@Override
 	String[] getArtefactTypes() {
 		[ControllerArtefactHandler.TYPE, DomainClassArtefactHandler.TYPE, BootstrapArtefactHandler.TYPE,
-				ServiceArtefactHandler.TYPE]
+				ServiceArtefactHandler.TYPE] as String[]
 	}
 
 	@Override
