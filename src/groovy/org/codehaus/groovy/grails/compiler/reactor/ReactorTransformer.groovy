@@ -17,6 +17,7 @@ package org.codehaus.groovy.grails.compiler.reactor
 
 import grails.web.controllers.ControllerMethod
 import groovy.transform.CompileStatic
+import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.AnnotationNode
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.MethodNode
@@ -27,16 +28,20 @@ import org.codehaus.groovy.grails.commons.ControllerArtefactHandler
 import org.codehaus.groovy.grails.commons.DomainClassArtefactHandler
 import org.codehaus.groovy.grails.commons.ServiceArtefactHandler
 import org.codehaus.groovy.grails.compiler.injection.AbstractGrailsArtefactTransformer
+import org.codehaus.groovy.grails.compiler.injection.AnnotatedClassInjector
 import org.codehaus.groovy.grails.compiler.injection.AstTransformer
 import org.codehaus.groovy.grails.compiler.injection.GrailsASTUtils
 import org.codehaus.groovy.grails.io.support.GrailsResourceUtils
+import org.codehaus.groovy.transform.ASTTransformation
+import org.codehaus.groovy.transform.GroovyASTTransformation
 import org.grails.plugins.events.reactor.api.EventsApi
 /**
  * @author Stephane Maldini
  */
 @AstTransformer
 @CompileStatic
-class ReactorTransformer extends AbstractGrailsArtefactTransformer {
+@GroovyASTTransformation
+class ReactorTransformer extends AbstractGrailsArtefactTransformer implements ASTTransformation {
 
 	static private CONTROLLER_PATTERN =
 			/.+\/$GrailsResourceUtils.GRAILS_APP_DIR\/controllers\/(.+)Controller\.groovy/
@@ -95,4 +100,10 @@ class ReactorTransformer extends AbstractGrailsArtefactTransformer {
 		super.performInjection(source, classNode)
 	}
 
+	@Override
+	void visit(ASTNode[] nodes, SourceUnit source) {
+		for (ClassNode node : source.getAST().getClasses()) {
+			super.performInjection(source,  node)
+		}
+	}
 }
