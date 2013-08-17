@@ -39,7 +39,7 @@ class ReactorPromise<T> implements Promise<T> {
 
     ReactorPromise(Closure<T> callable, Environment environment = null) {
         internalPromise = reactor.core.composable.Promise.<T> from(callable).env(environment)
-		        .get().resolve()
+		        .get().flush()
     }
 
     T get() {

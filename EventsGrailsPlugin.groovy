@@ -1,6 +1,9 @@
 import grails.async.Promises
+import groovy.transform.CompileStatic
 import org.grails.plugins.events.reactor.api.EventsApi
 import org.grails.plugins.events.reactor.promise.ReactorPromiseFactory
+import org.springframework.context.ApplicationContext
+import reactor.core.Environment
 /*
  * Copyright (c) 2011-2013 GoPivotal, Inc. All Rights Reserved.
  *
@@ -52,15 +55,18 @@ Grails Events based on Reactor API
 	def scm = [url: "https://github.com/reactor/grails-events"]
 
 	def doWithSpring = {
-		Promises.promiseFactory = new ReactorPromiseFactory()
-
-		instanceEventsApi(EventsApi)
+		reactorEnvironment(Environment)
+		instanceEventsApi(EventsApi) {
+			environment = ref('reactorEnvironment')
+		}
 	}
 
 	def doWithDynamicMethods = { ctx ->
+
 	}
 
-	def doWithApplicationContext = { ctx ->
+	def doWithApplicationContext = { ApplicationContext ctx ->
+		Promises.promiseFactory = new ReactorPromiseFactory(ctx.getBean(Environment))
 	}
 
 	def onChange = { event ->

@@ -33,10 +33,11 @@ import java.util.concurrent.TimeUnit
 @CompileStatic
 class ReactorPromiseFactory extends AbstractPromiseFactory {
 
-	Environment grailsEnvironment = new Environment()
+	Environment grailsEnvironment
 
-	ReactorPromiseFactory() {
+	ReactorPromiseFactory(Environment environment) {
 		super()
+		grailsEnvironment = environment ?: new Environment()
 	}
 
 	@Override
