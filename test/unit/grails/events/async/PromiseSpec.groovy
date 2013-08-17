@@ -17,6 +17,7 @@ package grails.events.async
 
 import grails.async.Promises
 import org.grails.async.decorator.PromiseDecorator
+import org.grails.async.factory.SynchronousPromiseFactory
 import org.grails.plugins.events.reactor.promise.ReactorPromiseFactory
 import spock.lang.Specification
 
@@ -35,7 +36,7 @@ class PromiseSpec extends Specification {
 	}
 
 	void cleanup() {
-		Promises.promiseFactory = null
+		Promises.promiseFactory = new SynchronousPromiseFactory()
 	}
 
 	void "Test add promise decorator"() {

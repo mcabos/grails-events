@@ -25,6 +25,7 @@ import reactor.core.composable.spec.Streams
 import reactor.core.spec.Reactors
 import reactor.event.Event
 import reactor.event.registry.Registration
+import reactor.event.selector.Selector
 import reactor.event.selector.Selectors
 import reactor.event.support.EventConsumer
 import reactor.function.Consumer
@@ -99,7 +100,7 @@ class EventsApi {
 		)
 	}
 
-	private Deferred<?, Stream<?>> streamCallback(Closure<?> callback){
+	private Deferred<?, Stream<?>> streamCallback(Closure<?> callback) {
 		Deferred<?, Stream<?>> s = null
 
 		if (callback) {
@@ -132,12 +133,21 @@ class EventsApi {
 
 	}
 
-	Registration<Consumer> on(instance, String key, Closure callback) {
-		appReactor.on(key, callback)
+	Registration<Consumer> on(instance, key, Closure callback) {
+		_on(instance, appReactor, key, callback)
 	}
 
-	Registration<Consumer> on(instance, String namespace, String key, Closure callback) {
-		reactorRegistry[namespace].on(key, callback)
+	Registration<Consumer> on(instance, String namespace, key, Closure callback) {
+		_on(instance, reactorRegistry[namespace], key, callback)
+	}
+
+	private Registration<Consumer> _on(instance, Reactor reactor, key, Closure callback) {
+		if (key instanceof String)
+			reactor.on key, callback
+		else if (key instanceof Selector)
+			reactor.on key, callback
+		else
+			reactor.on Selectors.$(key), callback
 	}
 
 	boolean removeListeners(instance, selector) {
@@ -149,14 +159,15 @@ class EventsApi {
 	}
 
 	private class WithStream extends EventsApi {
-		Deferred<?, Stream<?>> deferred
+		Deferred deferred
 
 		WithStream(Deferred<?, Stream<?>> deferred) {
 			this.deferred = deferred
 		}
 
 		@Override
-		protected void event(instance, key, data, String ns, Map params, Consumer<?> deferred) {
+		protected void event(instance, key, data, String ns, Map params, Consumer<?> _deferred) {
+			deferred.compose().consume _deferred
 			super.event(instance, key, data, ns, params, deferred)
 		}
 	}

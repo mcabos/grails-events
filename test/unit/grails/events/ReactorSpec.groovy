@@ -22,7 +22,7 @@ import spock.lang.Specification
 /**
  * See the API for {@link grails.test.mixin.support.GrailsUnitTestMixin} for usage instructions
  */
-@TestMixin(GrailsUnitTestMixin)
+//@TestMixin(GrailsUnitTestMixin)
 class ReactorSpec extends Specification {
 
     def setup() {
@@ -31,8 +31,4 @@ class ReactorSpec extends Specification {
     def cleanup() {
     }
 
-    void "test something"() {
-	    expect:"good"
-		    true == true
-    }
 }

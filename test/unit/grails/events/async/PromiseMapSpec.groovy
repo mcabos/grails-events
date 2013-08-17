@@ -17,6 +17,7 @@ package grails.events.async
 
 import grails.async.PromiseMap
 import grails.async.Promises
+import org.grails.async.factory.SynchronousPromiseFactory
 import org.grails.plugins.events.reactor.promise.ReactorPromiseFactory
 import spock.lang.Specification
 
@@ -32,7 +33,7 @@ class PromiseMapSpec extends Specification {
 	}
 
 	void cleanup() {
-		Promises.promiseFactory = null
+		Promises.promiseFactory = new SynchronousPromiseFactory()
 	}
 
 	void "Test PromiseMap with mixture of normal entries and promises populated via constructor"() {

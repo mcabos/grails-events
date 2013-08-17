@@ -17,6 +17,7 @@ package grails.events.async
 
 import grails.async.PromiseList
 import grails.async.Promises
+import org.grails.async.factory.SynchronousPromiseFactory
 import org.grails.plugins.events.reactor.promise.ReactorPromiseFactory
 import spock.lang.Specification
 
@@ -32,7 +33,7 @@ class PromiseListSpec extends Specification {
 	}
 
 	void cleanup() {
-		Promises.promiseFactory = null
+		Promises.promiseFactory = new SynchronousPromiseFactory()
 	}
 
 	void "Test promise list handling"() {

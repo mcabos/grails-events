@@ -38,7 +38,6 @@ import org.grails.plugins.events.reactor.api.EventsApi
 /**
  * @author Stephane Maldini
  */
-@AstTransformer
 @CompileStatic
 @GroovyASTTransformation
 class ReactorTransformer extends AbstractGrailsArtefactTransformer implements ASTTransformation {

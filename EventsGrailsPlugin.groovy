@@ -4,6 +4,7 @@ import org.grails.plugins.events.reactor.api.EventsApi
 import org.grails.plugins.events.reactor.promise.ReactorPromiseFactory
 import org.springframework.context.ApplicationContext
 import reactor.core.Environment
+import reactor.core.spec.Reactors
 /*
  * Copyright (c) 2011-2013 GoPivotal, Inc. All Rights Reserved.
  *
@@ -55,9 +56,12 @@ Grails Events based on Reactor API
 	def scm = [url: "https://github.com/reactor/grails-events"]
 
 	def doWithSpring = {
-		reactorEnvironment(Environment)
+		def grailsEnvironment = new Environment()
+		Promises.promiseFactory = new ReactorPromiseFactory(grailsEnvironment)
+
 		instanceEventsApi(EventsApi) {
-			environment = ref('reactorEnvironment')
+			environment = grailsEnvironment
+			appReactor = Reactors.reactor().env(grailsEnvironment).get()
 		}
 	}
 
@@ -66,7 +70,6 @@ Grails Events based on Reactor API
 	}
 
 	def doWithApplicationContext = { ApplicationContext ctx ->
-		Promises.promiseFactory = new ReactorPromiseFactory(ctx.getBean(Environment))
 	}
 
 	def onChange = { event ->
