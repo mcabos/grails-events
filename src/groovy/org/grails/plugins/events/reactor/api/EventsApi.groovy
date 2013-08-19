@@ -29,6 +29,7 @@ import reactor.event.selector.Selector
 import reactor.event.selector.Selectors
 import reactor.event.support.EventConsumer
 import reactor.function.Consumer
+import reactor.groovy.support.ClosureEventConsumer
 /**
  * @author Stephane Maldini
  */
@@ -72,48 +73,51 @@ class EventsApi {
 		stream
 	}
 
-	void event(instance, key, Closure callback) {
+	void event(instance, key,
+	           @DelegatesTo(strategy = Closure.DELEGATE_FIRST,
+			           value = ClosureEventConsumer)
+	           Closure callback) {
 		event(instance, key, null, null, callback)
 	}
 
-	void event(instance, key, data, Closure callback) {
+	void event(instance, key, data,
+	           @DelegatesTo(strategy = Closure.DELEGATE_FIRST,
+			           value = ClosureEventConsumer)
+	           Closure callback) {
 		event(instance, key, data, null, callback)
 	}
 
-	void event(instance, Map args, Closure callback = null) {
+	void event(instance, Map args,
+	           @DelegatesTo(strategy = Closure.DELEGATE_FIRST,
+			           value = ClosureEventConsumer)
+	           Closure callback = null) {
 		def namespace = args.remove('for') ?: args.remove('namespace')
 		event(instance,
 				args.remove('key'),
 				args.remove('data'),
 				(String) namespace,
 				(Map) args.remove('params') ?: args,
-				streamCallback(callback))
+				new ClosureEventConsumer(callback))
 	}
 
-	void event(instance, key, data = null, Map params = null, Closure callback = null) {
+	void event(instance, key, data = null, Map params = null,
+	           @DelegatesTo(strategy = Closure.DELEGATE_FIRST,
+			           value = ClosureEventConsumer)
+	           Closure callback = null) {
 		event(instance,
 				key,
 				data,
 				null,
 				params,
-				streamCallback(callback)
+				new ClosureEventConsumer(callback)
 		)
 	}
 
-	private Deferred<?, Stream<?>> streamCallback(Closure<?> callback) {
-		Deferred<?, Stream<?>> s = null
 
-		if (callback) {
-			s = Streams.<?> defer().env(environment).get()
-			s.compose().consume callback
-		}
+	protected void event(instance, key, data, String ns, Map params, Consumer<Event> deferred) {
 
-		s
-	}
-
-	protected void event(instance, key, data, String ns, Map params, Consumer<?> deferred) {
-
-		final ev = new Event(params ? new Event.Headers(params) : null, data)
+		final Event ev = Event.class.isAssignableFrom(data?.class) ? (Event)data :
+				new Event(params ? new Event.Headers(params) : null, data)
 
 		final reactor = ns ? reactorRegistry[ns] : appReactor
 
@@ -121,23 +125,22 @@ class EventsApi {
 			final replyTo = Selectors.$()
 			ev.setReplyTo(replyTo.t2)
 
-			if (deferred instanceof Deferred<Event, Stream<Event>>)
-				reactor.on replyTo.t1, deferred
-			else
-				reactor.on replyTo.t1, new EventConsumer(deferred)
-
-			reactor.send key, ev
-		} else {
-			reactor.notify key, ev
+			reactor.on replyTo.t1, deferred
 		}
 
+		if (ev.replyTo)
+			reactor.send key, ev
+		else
+			reactor.notify key, ev
 	}
 
-	Registration<Consumer> on(instance, key, Closure callback) {
+	Registration<Consumer> on(instance, key, @DelegatesTo(strategy = Closure.DELEGATE_FIRST,
+			value = ClosureEventConsumer.ReplyDecorator) Closure callback) {
 		_on(instance, appReactor, key, callback)
 	}
 
-	Registration<Consumer> on(instance, String namespace, key, Closure callback) {
+	Registration<Consumer> on(instance, String namespace, key, @DelegatesTo(strategy = Closure.DELEGATE_FIRST,
+			value = ClosureEventConsumer.ReplyDecorator) Closure callback) {
 		_on(instance, reactorRegistry[namespace], key, callback)
 	}
 
@@ -166,9 +169,14 @@ class EventsApi {
 		}
 
 		@Override
-		protected void event(instance, key, data, String ns, Map params, Consumer<?> _deferred) {
-			deferred.compose().consume _deferred
-			super.event(instance, key, data, ns, params, deferred)
+		protected void event(instance, key, data, String ns, Map params, Consumer<Event> _deferred) {
+			super.event(instance, key, data, ns, params, new Consumer<Event>() {
+				@Override
+				void accept(Event o) {
+					_deferred << o
+					deferred << o.data
+				}
+			})
 		}
 	}
 }
