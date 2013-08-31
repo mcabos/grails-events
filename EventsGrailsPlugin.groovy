@@ -71,9 +71,6 @@ Grails Events based on Reactor API
 	def artefacts = [EventsArtefactHandler]
 
 	def doWithSpring = {
-		def grailsEnvironment = new Environment()
-		Promises.promiseFactory = new ReactorPromiseFactory(grailsEnvironment)
-
 		reactorBeanPostProcessor(ConsumerBeanPostProcessor)
 		reactorConfigPostProcessor(ReactorConfigPostProcessor){
 			fixGroovyExtensions = application.config.grails.events.fixGroovyExtensions ?: true

@@ -15,6 +15,7 @@
  */
 package org.grails.plugins.events.reactor.configuration
 
+import grails.async.Promises
 import groovy.transform.CompileStatic
 import org.apache.log4j.Logger
 import org.codehaus.groovy.grails.commons.GrailsApplication
@@ -23,6 +24,7 @@ import org.codehaus.groovy.grails.commons.ServiceArtefactHandler
 import org.codehaus.groovy.grails.plugins.metadata.GrailsPlugin
 import org.codehaus.groovy.runtime.m12n.ExtensionModuleScanner
 import org.grails.plugins.events.reactor.api.EventsApi
+import org.grails.plugins.events.reactor.promise.ReactorPromiseFactory
 import org.springframework.beans.factory.BeanFactory
 import reactor.spring.beans.factory.config.ConsumerBeanPostProcessor as C
 import org.springframework.beans.BeansException
@@ -45,10 +47,11 @@ class ReactorConfigPostProcessor implements Ordered, BeanFactoryPostProcessor {
 	private static final Logger log = Logger.getLogger(ReactorConfigPostProcessor)
 
 	boolean fixGroovyExtensions = false
+	boolean enableReactorPromise = true
 
 	@Override
 	void postProcessBeanFactory(ConfigurableListableBeanFactory configurableListableBeanFactory) throws BeansException {
-		if(fixGroovyExtensions)
+		if (fixGroovyExtensions)
 			fixGroovyExtensions()
 
 		initContext configurableListableBeanFactory
@@ -86,7 +89,7 @@ class ReactorConfigPostProcessor implements Ordered, BeanFactoryPostProcessor {
 		}
 	}
 
-	static GroovyEnvironment reloadConfiguration(GrailsApplication grailsApplication, EventsApi eventsApi) {
+	GroovyEnvironment reloadConfiguration(GrailsApplication grailsApplication, EventsApi eventsApi) {
 		Script dslInstance
 		GroovyEnvironment current, previous
 		Map<Integer, GroovyEnvironment> sortedEnvs = [:]
@@ -126,6 +129,10 @@ class ReactorConfigPostProcessor implements Ordered, BeanFactoryPostProcessor {
 		assert current
 		eventsApi.groovyEnvironment = current
 		eventsApi.appReactor = (Reactor) current[EventsApi.GRAILS_REACTOR]
+
+		if (enableReactorPromise)
+			Promises.promiseFactory = new ReactorPromiseFactory(current.environment())
+
 		current
 	}
 
