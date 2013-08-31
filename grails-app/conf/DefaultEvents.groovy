@@ -30,6 +30,5 @@ doWithReactor = {
 		}
 	}
 	reactor(EventsApi.GRAILS_REACTOR){
-		println 'testd'
 	}
 }
