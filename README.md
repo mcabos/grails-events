@@ -11,7 +11,9 @@ dependencies {
 }
 ```
 
-Grails Events plugin statically injects [EventsAPI](https://github.com/reactor/grails-events/blob/master/src/groovy/org/grails/plugins/events/reactor/api/EventsApi.groovy) methods in Grails Domains, Controllers, Services and Bootstrap artefacts.
+Grails Events plugin statically injects [EventsAPI](https://github.com/reactor/grails-events/blob/master/src/groovy/org/grails/plugins/events/reactor/api/EventsApi.groovy) methods in Grails Controllers, Services and Bootstrap artefacts.
+Any other beans can inject instanceEventsApi in order to call the same methods.
+
 Here is basic sample of what you can do from a Controller:
 
 ```groovy

@@ -31,6 +31,7 @@ import org.codehaus.groovy.grails.compiler.injection.AbstractGrailsArtefactTrans
 import org.codehaus.groovy.grails.compiler.injection.AnnotatedClassInjector
 import org.codehaus.groovy.grails.compiler.injection.AstTransformer
 import org.codehaus.groovy.grails.compiler.injection.GrailsASTUtils
+import org.codehaus.groovy.grails.compiler.injection.GrailsDomainClassInjector
 import org.codehaus.groovy.grails.io.support.GrailsResourceUtils
 import org.codehaus.groovy.transform.ASTTransformation
 import org.codehaus.groovy.transform.GroovyASTTransformation
@@ -40,17 +41,18 @@ import org.grails.plugins.events.reactor.api.EventsApi
  */
 @CompileStatic
 @GroovyASTTransformation
-class ReactorTransformer extends AbstractGrailsArtefactTransformer implements ASTTransformation {
+class ReactorTransformer extends AbstractGrailsArtefactTransformer implements ASTTransformation,
+		GrailsDomainClassInjector {
 
 	static private CONTROLLER_PATTERN =
 			/.+\/$GrailsResourceUtils.GRAILS_APP_DIR\/controllers\/(.+)Controller\.groovy/
-	static private  SERVICE_PATTERN =
+	static private SERVICE_PATTERN =
 			/.+\/$GrailsResourceUtils.GRAILS_APP_DIR\/conf\/(.*)BootStrap\.groovy/
-	static private  BOOTSTRAP_PATTERN =
+	static private BOOTSTRAP_PATTERN =
 			/.+\/$GrailsResourceUtils.GRAILS_APP_DIR\/services\/(.+)Service\.groovy/
-	static private  DOMAIN_PATTERN =
+	/*static private DOMAIN_PATTERN =
 			/.+\/$GrailsResourceUtils.GRAILS_APP_DIR\/domain\/(.+)\.groovy/
-
+*/
 	@Override
 	Class<?> getInstanceImplementation() {
 		return EventsApi.class
@@ -64,8 +66,8 @@ class ReactorTransformer extends AbstractGrailsArtefactTransformer implements AS
 	boolean shouldInject(URL url) {
 		url && (CONTROLLER_PATTERN==~url.file ||
 				SERVICE_PATTERN==~url.file ||
-				BOOTSTRAP_PATTERN==~url.file ||
-				DOMAIN_PATTERN==~url.file
+				BOOTSTRAP_PATTERN==~url.file /*||
+				DOMAIN_PATTERN==~url.file*/
 		)
 	}
 
@@ -105,7 +107,12 @@ class ReactorTransformer extends AbstractGrailsArtefactTransformer implements AS
 	@Override
 	void visit(ASTNode[] nodes, SourceUnit source) {
 		for (ClassNode node : source.getAST().getClasses()) {
-			super.performInjection(source,  node)
+			super.performInjection(source, node)
 		}
+	}
+
+	@Override
+	void performInjectionOnAnnotatedEntity(ClassNode classNode) {
+
 	}
 }
