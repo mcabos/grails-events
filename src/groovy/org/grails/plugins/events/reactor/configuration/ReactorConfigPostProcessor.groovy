@@ -51,8 +51,10 @@ class ReactorConfigPostProcessor implements Ordered, BeanFactoryPostProcessor {
 
 	@Override
 	void postProcessBeanFactory(ConfigurableListableBeanFactory configurableListableBeanFactory) throws BeansException {
-		if (fixGroovyExtensions)
+		if (fixGroovyExtensions){
 			fixGroovyExtensions()
+			fixGroovyExtensions = false
+		}
 
 		initContext configurableListableBeanFactory
 	}
