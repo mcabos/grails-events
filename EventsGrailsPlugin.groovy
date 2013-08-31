@@ -90,10 +90,7 @@ Grails Events based on Reactor API
 		if (event.source instanceof Class) {
 			def ctx = event.application.mainContext
 			if (application.isServiceClass(event.source)) {
-				ctx.reactorConfigPostProcessor.scanServices(
-						ctx, application.getArtefactByLogicalPropertyName(ServiceArtefactHandler.TYPE,
-						GrailsNameUtils.getLogicalPropertyName(event.source.simpleName, ServiceArtefactHandler.TYPE))
-				)
+				ctx.reactorConfigPostProcessor.scanServices(ctx, event.source)
 			} else if (application.isArtefactOfType(EventsArtefactHandler.TYPE, event.source)) {
 				application.addArtefact(EventsArtefactHandler.TYPE, event.source)
 				ctx.reactorConfigPostProcessor.initContext(ctx)

@@ -63,7 +63,13 @@ class EventsApi {
 		stream
 	}
 
-	void event(instance = null, Map args,
+	void event(Map args,
+	           @DelegatesTo(strategy = Closure.DELEGATE_FIRST,
+			           value = ClosureEventConsumer)
+	           Closure callback = null) {
+		event(null, args, callback)
+	}
+	void event(instance, Map args,
 	           @DelegatesTo(strategy = Closure.DELEGATE_FIRST,
 			           value = ClosureEventConsumer)
 	           Closure callback = null) {
@@ -76,7 +82,7 @@ class EventsApi {
 				new ClosureEventConsumer(callback))
 	}
 
-	void event(instance = null, key = null, data = null,
+	void event(instance, key = null, data = null,
 	           @DelegatesTo(strategy = Closure.DELEGATE_FIRST,
 			           value = ClosureEventConsumer)
 	           Closure callback = null) {
@@ -134,12 +140,12 @@ class EventsApi {
 	}
 
 
-	boolean removeConsumers(instance = null, String ns = null, selector) {
-		(ns ? groovyEnvironment[ns] : appReactor).consumerRegistry.unregister(selector)
+	boolean removeConsumers(instance = null, String ns = null, key) {
+		(ns ? groovyEnvironment[ns] : appReactor).consumerRegistry.unregister(key)
 	}
 
-	int countConsumers(instance = null, String ns = null, selector) {
-		(ns ? groovyEnvironment[ns] : appReactor).consumerRegistry.select(selector).size()
+	int countConsumers(instance = null, String ns = null, key) {
+		(ns ? groovyEnvironment[ns] : appReactor).consumerRegistry.select(key).size()
 	}
 
 
@@ -154,7 +160,7 @@ class EventsApi {
 	}
 
 	private class WithStream extends EventsApi {
-		Deferred deferred
+		final Deferred deferred
 
 		WithStream(Deferred<?, Stream<?>> deferred) {
 			this.deferred = deferred

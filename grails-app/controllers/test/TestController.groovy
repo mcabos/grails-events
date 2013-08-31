@@ -15,7 +15,12 @@
  */
 package test
 
+import org.grails.plugins.events.reactor.api.EventsApi
+import org.grails.plugins.events.reactor.configuration.ReactorConfigPostProcessor
 import reactor.function.Consumer
+
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 
 /**
  * @author Stephane Maldini
@@ -23,6 +28,7 @@ import reactor.function.Consumer
 class TestController {
 
 	def instanceEventsApi
+	def reactorConfigPostProcessor
 
 	def onTest() {
 		instanceEventsApi.on('test') {
@@ -32,20 +38,32 @@ class TestController {
 	}
 
 	def test() {
-		//tasks test: Book.async.list()
-		instanceEventsApi.event ('test', 1 ) {
-			println it
+		instanceEventsApi.event(this, 'test', 1) {
+			log.info 'eventCallback: ' + it
 		}
 
 		instanceEventsApi.withStream {
-			event(this, 'test', 1) {
-				println '1x '+ it
+			event(key:'test', data:1) {
+				log.info 'eventCallback2: ' + it
 			}
-		} consume ({
-			println '2x ' + it
+		} consume({
+			log.info 'streamCallback:  ' + it
 		} as Consumer)
 
+		def latch = new CountDownLatch(1)
+		instanceEventsApi.event(key:'/someUri', data:1) {
+			log.info 'uriCallback: ' + it
+			latch.countDown()
+		}
 
+		latch.await(5, TimeUnit.SECONDS)
+
+		log.info 'count:' + instanceEventsApi.countConsumers('test')
+		log.info 'remove test consumers:' + instanceEventsApi.removeConsumers('test')
+		log.info 'remove /test consumers:' + instanceEventsApi.removeConsumers('/someUri')
+		log.info 'recount:' + instanceEventsApi.countConsumers('test')
+		reactorConfigPostProcessor.scanServices(applicationContext, TestService)
+		log.info 'final count:' + instanceEventsApi.countConsumers('test')
 
 		render 'test'
 	}

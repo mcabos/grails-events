@@ -56,18 +56,22 @@ class ReactorConfigPostProcessor implements Ordered, BeanFactoryPostProcessor {
 
 			reloadConfiguration grailsApplication, eventsApi
 
-			scanServices(bf, grailsApplication.getArtefacts(ServiceArtefactHandler.TYPE) as GrailsClass[])
+			def artefacts = grailsApplication.getArtefacts(ServiceArtefactHandler.TYPE)
+			def classes = []
+			for(final GrailsClass artefact : artefacts){ classes << artefact.clazz }
+
+			scanServices(bf, classes as Class[])
 
 		}
 	}
 
-	void scanServices(BeanFactory bf, GrailsClass... classes){
+	void scanServices(BeanFactory bf, Class... classes){
 		Set<Method> methods
 		def consumerBeanPostProcessor = bf.getBean(ConsumerBeanPostProcessor)
-		for(artefact in classes){
-			methods = C.findHandlerMethods(artefact.clazz, ConsumerBeanPostProcessor.CONSUMER_METHOD_FILTER)
+		for(clazz in classes){
+			methods = C.findHandlerMethods(clazz, ConsumerBeanPostProcessor.CONSUMER_METHOD_FILTER)
 			if(methods)
-				consumerBeanPostProcessor.initBean(bf.getBean(artefact.clazz), methods)
+				consumerBeanPostProcessor.initBean(bf.getBean(clazz), methods)
 		}
 	}
 

@@ -17,6 +17,7 @@ package test
 
 import reactor.spring.annotation.ReplyTo
 import reactor.spring.annotation.Selector
+import reactor.spring.annotation.SelectorType
 
 /**
  * @author Stephane Maldini
@@ -25,22 +26,31 @@ class TestService {
 
 	@Selector
 	void test(){
-		println '1'
+		log.info 'test 1'
 	}
+
 	@Selector ('test')
 	void test2(){
-		println Thread.currentThread()
+		log.info 'test 2'
 	}
+
 	@Selector ('test')
 	@ReplyTo
 	void test3(){
-		println 'ss'
+		log.info 'test 3'
 	}
 
 	@Selector ('test')
 	@ReplyTo
 	String test4(){
-		println 'ww'
-		'wxxxjjss'
+		log.info 'test 4'
+		'reply from 4'
+	}
+
+	@Selector (value='/**', type = SelectorType.URI)
+	@ReplyTo
+	String test5(){
+		log.info 'test 5'
+		'reply from 5'
 	}
 }
