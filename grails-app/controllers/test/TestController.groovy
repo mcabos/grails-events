@@ -46,9 +46,9 @@ class TestController {
 			event(key:'test', data:1) {
 				log.info 'eventCallback2: ' + it
 			}
-		} consume({
+		} << {
 			log.info 'streamCallback:  ' + it
-		} as Consumer)
+		}
 
 		def latch = new CountDownLatch(1)
 		instanceEventsApi.event(key:'/someUri', data:1) {

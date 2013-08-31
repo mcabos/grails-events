@@ -75,7 +75,10 @@ Grails Events based on Reactor API
 		Promises.promiseFactory = new ReactorPromiseFactory(grailsEnvironment)
 
 		reactorBeanPostProcessor(ConsumerBeanPostProcessor)
-		reactorConfigPostProcessor(ReactorConfigPostProcessor)
+		reactorConfigPostProcessor(ReactorConfigPostProcessor){
+			fixGroovyExtensions = application.config.grails.events.fixGroovyExtensions ?: true
+		}
+
 		instanceEventsApi(EventsApi)
 	}
 

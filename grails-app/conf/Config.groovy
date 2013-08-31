@@ -9,12 +9,6 @@ log4j = {
 		console name: 'stdout', layout: pattern(conversionPattern: '%d{yyyy-MMM-dd HH:mm:ss,SSS} [%t] %c %x[%p] %m%n')
 	}
 
-	root {
-		info 'stdout'
-		additivity = true
-	}
-
-
 	debug 'org.grails.plugins.events',
 			'org.codehaus.groovy.grails.compiler.reactor',
 			'reactor', 'grails.app.services.test', 'grails.app.controllers.test', 'test'

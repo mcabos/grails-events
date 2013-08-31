@@ -15,6 +15,7 @@
  */
 package test
 
+import groovy.transform.CompileStatic
 import reactor.spring.annotation.ReplyTo
 import reactor.spring.annotation.Selector
 import reactor.spring.annotation.SelectorType
@@ -22,6 +23,7 @@ import reactor.spring.annotation.SelectorType
 /**
  * @author Stephane Maldini
  */
+@CompileStatic
 class TestService {
 
 	@Selector

@@ -21,6 +21,7 @@ import org.codehaus.groovy.grails.commons.GrailsApplication
 import org.codehaus.groovy.grails.commons.GrailsClass
 import org.codehaus.groovy.grails.commons.ServiceArtefactHandler
 import org.codehaus.groovy.grails.plugins.metadata.GrailsPlugin
+import org.codehaus.groovy.runtime.m12n.ExtensionModuleScanner
 import org.grails.plugins.events.reactor.api.EventsApi
 import org.springframework.beans.factory.BeanFactory
 import reactor.spring.beans.factory.config.ConsumerBeanPostProcessor as C
@@ -32,6 +33,9 @@ import reactor.core.Reactor
 import reactor.groovy.config.GroovyEnvironment
 
 import java.lang.reflect.Method
+import org.codehaus.groovy.reflection.CachedClass
+import org.codehaus.groovy.runtime.metaclass.MetaClassRegistryImpl
+
 /**
  * @author Stephane Maldini
  */
@@ -40,12 +44,17 @@ class ReactorConfigPostProcessor implements Ordered, BeanFactoryPostProcessor {
 
 	private static final Logger log = Logger.getLogger(ReactorConfigPostProcessor)
 
+	boolean fixGroovyExtensions = false
+
 	@Override
 	void postProcessBeanFactory(ConfigurableListableBeanFactory configurableListableBeanFactory) throws BeansException {
+		if(fixGroovyExtensions)
+			fixGroovyExtensions()
+
 		initContext configurableListableBeanFactory
 	}
 
-	void initContext(BeanFactory bf){
+	void initContext(BeanFactory bf) {
 		bf.with {
 			def grailsApplication = getBean(GrailsApplication)
 			def eventsApi = getBean(EventsApi)
@@ -58,19 +67,21 @@ class ReactorConfigPostProcessor implements Ordered, BeanFactoryPostProcessor {
 
 			def artefacts = grailsApplication.getArtefacts(ServiceArtefactHandler.TYPE)
 			def classes = []
-			for(final GrailsClass artefact : artefacts){ classes << artefact.clazz }
+			for (final GrailsClass artefact : artefacts) {
+				classes << artefact.clazz
+			}
 
 			scanServices(bf, classes as Class[])
 
 		}
 	}
 
-	void scanServices(BeanFactory bf, Class... classes){
+	void scanServices(BeanFactory bf, Class... classes) {
 		Set<Method> methods
 		def consumerBeanPostProcessor = bf.getBean(ConsumerBeanPostProcessor)
-		for(clazz in classes){
+		for (clazz in classes) {
 			methods = C.findHandlerMethods(clazz, ConsumerBeanPostProcessor.CONSUMER_METHOD_FILTER)
-			if(methods)
+			if (methods)
 				consumerBeanPostProcessor.initBean(bf.getBean(clazz), methods)
 		}
 	}
@@ -116,6 +127,48 @@ class ReactorConfigPostProcessor implements Ordered, BeanFactoryPostProcessor {
 		eventsApi.groovyEnvironment = current
 		eventsApi.appReactor = (Reactor) current[EventsApi.GRAILS_REACTOR]
 		current
+	}
+
+	static private void fixGroovyExtensions() {
+		Map<CachedClass, List<MetaMethod>> map = [:]
+
+		ClassLoader classLoader = Thread.currentThread().contextClassLoader
+
+		try {
+			Enumeration<URL> resources = classLoader.getResources(ExtensionModuleScanner.MODULE_META_INF_FILE)
+			URL url
+			while (resources.hasMoreElements()) {
+				url = resources.nextElement()
+				if (url.path.contains('groovy-all')) {
+					// already registered
+					continue
+				}
+				Properties properties = new Properties()
+				InputStream inStream
+				try {
+					inStream = url.openStream()
+					properties.load(inStream)
+					((MetaClassRegistryImpl) GroovySystem.metaClassRegistry).registerExtensionModuleFromProperties(
+							properties,
+							classLoader,
+							map
+					)
+				}
+				catch (IOException e) {
+					throw new GroovyRuntimeException("Unable to load module META-INF descriptor", e)
+				}
+				finally {
+					inStream?.close()
+				}
+			}
+		}
+		catch (IOException ignored) {
+		}
+
+		map.each { CachedClass cls, List<MetaMethod> methods ->
+			cls.setNewMopMethods(methods)
+		}
+
 	}
 
 	@Override
