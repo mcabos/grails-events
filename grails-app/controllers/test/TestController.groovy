@@ -15,12 +15,9 @@
  */
 package test
 
-import org.grails.plugins.events.reactor.api.EventsApi
-import org.grails.plugins.events.reactor.configuration.ReactorConfigPostProcessor
-import reactor.function.Consumer
-
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import static grails.async.Promises.*
 
 /**
  * @author Stephane Maldini
@@ -65,7 +62,10 @@ class TestController {
 		reactorConfigPostProcessor.scanServices(applicationContext, TestService)
 		log.info 'final count:' + instanceEventsApi.countConsumers('test')
 
-		render 'test'
+		//tasks test: Book.async.list()
+		task{
+			render 'test'
+		}
 	}
 
 }
