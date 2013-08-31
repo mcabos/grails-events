@@ -16,7 +16,6 @@
 
 import org.grails.plugins.events.reactor.api.EventsApi
 import reactor.core.configuration.DispatcherType
-import reactor.event.dispatch.SynchronousDispatcher
 
 doWithReactor = {
 	environment = {
