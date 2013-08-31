@@ -109,7 +109,7 @@ class ConsumerBeanPostProcessor implements BeanPostProcessor, Ordered {
 			//register [replyTo]consumer
 			String replyTo = replyToAnno?.value()
 			Invoker handler = new Invoker(method, bean)
-			consumer = replyTo ?
+			consumer = replyToAnno ?
 					new ReplyToServiceConsumer(reactor, replyTo, handler) :
 					new ServiceConsumer(handler)
 
@@ -171,8 +171,10 @@ class ConsumerBeanPostProcessor implements BeanPostProcessor, Ordered {
 
 		@Override
 		void accept(Event ev) {
-			Object result = handler.apply(ev)
-			reactor.notify replyToKey, Event.wrap(result)
+			def result = handler.apply(ev)
+			def _replyToKey = replyToKey ?: ev.replyTo
+			if(_replyToKey)
+				reactor.notify _replyToKey, Event.wrap(result)
 		}
 	}
 

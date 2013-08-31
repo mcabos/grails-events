@@ -57,11 +57,19 @@ class EventsApi {
 		r
 	}
 
+	private WithStream newStream(Deferred d, Closure c){
+		def withStream = new WithStream(d)
+		withStream.appReactor = appReactor
+		withStream.groovyEnvironment = groovyEnvironment
+		c.delegate = withStream
+		c.resolveStrategy = Closure.DELEGATE_FIRST
+		c.call()
+		withStream
+	}
+
 	Stream<?> withStream(instance, Deferred<?, Stream<?>> s,
 	                     @DelegatesTo(strategy = Closure.DELEGATE_FIRST, value = WithStream) Closure c) {
-		def withStream = new WithStream(s)
-		c.delegate = withStream
-		c.call()
+		newStream(s, c)
 		s.compose()
 	}
 
@@ -71,12 +79,8 @@ class EventsApi {
 
 		def deferred = Streams.<?> defer().env(groovyEnvironment.environment()).get()
 		def stream = deferred.compose()
-		stream.consume c
 
-		def withStream = new WithStream(deferred)
-		c.delegate = withStream
-		c.call()
-
+		newStream(deferred, c)
 		stream
 	}
 
@@ -116,7 +120,7 @@ class EventsApi {
 				data,
 				null,
 				params,
-				new ClosureEventConsumer(callback)
+				callback ? new ClosureEventConsumer(callback) : null
 		)
 	}
 
@@ -180,7 +184,9 @@ class EventsApi {
 			super.event(instance, key, data, ns, params, new Consumer<Event>() {
 				@Override
 				void accept(Event o) {
-					_deferred << o
+					if(_deferred)
+						_deferred << o
+
 					deferred << o.data
 				}
 			})

@@ -15,6 +15,8 @@
  */
 package test
 
+import reactor.function.Consumer
+
 /**
  * @author Stephane Maldini
  */
@@ -22,20 +24,30 @@ class TestController {
 
 	def instanceEventsApi
 
-	def test() {
-		//tasks test: Book.async.list()
-
-		instanceEventsApi.on(this,'test'){
+	def onTest() {
+		instanceEventsApi.on(this, 'test') {
 			reply it
 		}
+		render ' on test '
+	}
 
-		instanceEventsApi.event(this,'test', 1){
+	def test() {
+		//tasks test: Book.async.list()
+		instanceEventsApi.event ( this, 'test', 1 ) {
 			println it
-
-			cancel()
 		}
+
+		instanceEventsApi.withStream(this) {
+			event(this, 'test', 1) {
+				println '1x '+ it
+			}
+		} consume ({
+			println '2x ' + it
+		} as Consumer)
+
 
 
 		render 'test'
 	}
+
 }

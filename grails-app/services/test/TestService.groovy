@@ -15,6 +15,7 @@
  */
 package test
 
+import reactor.spring.annotation.ReplyTo
 import reactor.spring.annotation.Selector
 
 /**
@@ -31,13 +32,15 @@ class TestService {
 		println Thread.currentThread()
 	}
 	@Selector ('test')
+	@ReplyTo
 	void test3(){
 		println 'ss'
 	}
 
 	@Selector ('test')
+	@ReplyTo
 	String test4(){
 		println 'ww'
-		'wss'
+		'wxxxjjss'
 	}
 }
