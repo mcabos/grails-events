@@ -16,6 +16,9 @@
 package org.grails.plugins.events.reactor.api
 
 import groovy.transform.CompileStatic
+import org.apache.log4j.Logger
+import org.codehaus.groovy.grails.commons.GrailsApplication
+import org.grails.plugins.events.reactor.configuration.EventsArtefactHandler
 import reactor.core.Environment
 import reactor.core.Reactor
 import reactor.core.composable.Deferred
@@ -29,6 +32,7 @@ import reactor.event.selector.Selector
 import reactor.event.selector.Selectors
 import reactor.event.support.EventConsumer
 import reactor.function.Consumer
+import reactor.groovy.config.GroovyEnvironment
 import reactor.groovy.support.ClosureEventConsumer
 /**
  * @author Stephane Maldini
@@ -36,17 +40,20 @@ import reactor.groovy.support.ClosureEventConsumer
 @CompileStatic
 class EventsApi {
 
-	Environment environment
+	private static final log = Logger.getLogger(EventsApi)
+
+	static final String GRAILS_REACTOR = 'grailsReactor'
+
+	GroovyEnvironment groovyEnvironment
 	Reactor appReactor
-	final Map<String, Reactor> reactorRegistry = [:]
 
 	Reactor newReactor(instance) {
-		Reactors.reactor().env(environment).get()
+		Reactors.reactor().env(groovyEnvironment.environment()).get()
 	}
 
 	Reactor newReactor(instance, String namespace) {
-		def r = Reactors.reactor().env(environment).get()
-		reactorRegistry[namespace] = r
+		def r = Reactors.reactor().env(groovyEnvironment.environment()).get()
+		groovyEnvironment[namespace] = r
 		r
 	}
 
@@ -62,7 +69,7 @@ class EventsApi {
 	Stream<?> withStream(instance, @DelegatesTo(strategy = Closure.DELEGATE_FIRST,
 			value = WithStream) Closure c) {
 
-		def deferred = Streams.<?> defer().env(environment).get()
+		def deferred = Streams.<?> defer().env(groovyEnvironment.environment()).get()
 		def stream = deferred.compose()
 		stream.consume c
 
@@ -116,10 +123,10 @@ class EventsApi {
 
 	protected void event(instance, key, data, String ns, Map params, Consumer<Event> deferred) {
 
-		final Event ev = Event.class.isAssignableFrom(data?.class) ? (Event)data :
+		final Event ev = Event.class.isAssignableFrom(data?.class) ? (Event) data :
 				new Event(params ? new Event.Headers(params) : null, data)
 
-		final reactor = ns ? reactorRegistry[ns] : appReactor
+		final reactor = ns ? groovyEnvironment[ns] : appReactor
 
 		if (deferred) {
 			final replyTo = Selectors.$()
@@ -141,7 +148,7 @@ class EventsApi {
 
 	Registration<Consumer> on(instance, String namespace, key, @DelegatesTo(strategy = Closure.DELEGATE_FIRST,
 			value = ClosureEventConsumer.ReplyDecorator) Closure callback) {
-		_on(instance, reactorRegistry[namespace], key, callback)
+		_on(instance, groovyEnvironment[namespace], key, callback)
 	}
 
 	private Registration<Consumer> _on(instance, Reactor reactor, key, Closure callback) {

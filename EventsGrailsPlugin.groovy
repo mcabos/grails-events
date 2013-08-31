@@ -1,10 +1,3 @@
-import grails.async.Promises
-import groovy.transform.CompileStatic
-import org.grails.plugins.events.reactor.api.EventsApi
-import org.grails.plugins.events.reactor.promise.ReactorPromiseFactory
-import org.springframework.context.ApplicationContext
-import reactor.core.Environment
-import reactor.core.spec.Reactors
 /*
  * Copyright (c) 2011-2013 GoPivotal, Inc. All Rights Reserved.
  *
@@ -21,6 +14,18 @@ import reactor.core.spec.Reactors
  * limitations under the License.
  */
 
+import grails.async.Promises
+import grails.util.GrailsNameUtils
+import org.codehaus.groovy.grails.commons.ServiceArtefactHandler
+import org.grails.plugins.events.reactor.api.EventsApi
+import org.grails.plugins.events.reactor.configuration.ConsumerBeanPostProcessor
+import org.grails.plugins.events.reactor.configuration.EventsArtefactHandler
+import org.grails.plugins.events.reactor.configuration.ReactorConfigPostProcessor
+import org.grails.plugins.events.reactor.promise.ReactorPromiseFactory
+import org.springframework.context.ApplicationContext
+import reactor.core.Environment
+
+
 class EventsGrailsPlugin {
 	def version = "1.0.0.BUILD-SNAPSHOT"
 	def grailsVersion = "2.2 > *"
@@ -33,6 +38,7 @@ class EventsGrailsPlugin {
 			"grails-app/domain",
 			"grails-app/taglib",
 			"grails-app/utils",
+			"grails-app/*/test/*",
 			"web-app",
 			"lib",
 			"scripts",
@@ -40,7 +46,13 @@ class EventsGrailsPlugin {
 
 	def packaging = "binary"
 
-	def observe = [ "services" ]
+	def observe = ["services"]
+	def after = ["services"]
+
+	def watchedResources = [
+			"file:./grails-app/conf/*Events.groovy",
+			"file:./plugins/*/grails-app/conf/*Events.groovy"
+	]
 
 	def title = "Grails Events Plugin" // Headline display name of the plugin
 	def author = "Stephane Maldini"
@@ -55,14 +67,16 @@ Grails Events based on Reactor API
 	def issueManagement = [system: "GITHUB", url: "https://github.com/reactor/grails-events/issues"]
 	def scm = [url: "https://github.com/reactor/grails-events"]
 
+
+	def artefacts = [EventsArtefactHandler]
+
 	def doWithSpring = {
 		def grailsEnvironment = new Environment()
 		Promises.promiseFactory = new ReactorPromiseFactory(grailsEnvironment)
 
-		instanceEventsApi(EventsApi) {
-			environment = grailsEnvironment
-			appReactor = Reactors.reactor().env(grailsEnvironment).get()
-		}
+		reactorBeanPostProcessor(ConsumerBeanPostProcessor)
+		reactorConfigPostProcessor(ReactorConfigPostProcessor)
+		instanceEventsApi(EventsApi)
 	}
 
 	def doWithDynamicMethods = { ctx ->
@@ -73,6 +87,19 @@ Grails Events based on Reactor API
 	}
 
 	def onChange = { event ->
+		if (event.source instanceof Class) {
+			def ctx = event.application.mainContext
+			if (application.isServiceClass(event.source)) {
+				ctx.reactorConfigPostProcessor.scanServices(
+						ctx, application.getArtefactByLogicalPropertyName(ServiceArtefactHandler.TYPE,
+						GrailsNameUtils.getLogicalPropertyName(event.source.simpleName, ServiceArtefactHandler.TYPE))
+				)
+			} else if (application.isArtefactOfType(EventsArtefactHandler.TYPE, event.source)) {
+				application.addArtefact(EventsArtefactHandler.TYPE, event.source)
+				ctx.reactorConfigPostProcessor.initContext(ctx)
+			}
+
+		}
 	}
 
 	def onConfigChange = { event ->

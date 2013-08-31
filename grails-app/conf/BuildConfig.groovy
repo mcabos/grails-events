@@ -27,13 +27,18 @@ grails.project.dependency.resolution = {
 
 	dependencies {
 		runtime 'org.projectreactor:reactor-groovy:1.0.0.BUILD-SNAPSHOT'
-		runtime 'org.projectreactor:reactor-spring:1.0.0.BUILD-SNAPSHOT'
+		runtime ('org.projectreactor:reactor-spring:1.0.0.BUILD-SNAPSHOT'){
+			excludes 'spring-core','spring-expression','spring-beans','spring-context','spring-context-support'
+		}
 
 	}
 
 	plugins {
+		compile(":hibernate:3.6.10.M6") {
+			export = false
+		}
 		build(
-				":release:3.0.0", ":rest-client-builder:1.0.3") {
+				":release:3.0.0", ":tomcat:7.0.40", ":rest-client-builder:1.0.3") {
 			export = false
 		}
 	}

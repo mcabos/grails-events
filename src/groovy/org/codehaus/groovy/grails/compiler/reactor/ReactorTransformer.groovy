@@ -62,8 +62,11 @@ class ReactorTransformer extends AbstractGrailsArtefactTransformer implements AS
 	}
 
 	boolean shouldInject(URL url) {
-		url && (CONTROLLER_PATTERN==~url.file || SERVICE_PATTERN==~url.file || BOOTSTRAP_PATTERN==~url.file ||
-				DOMAIN_PATTERN==~url.file)
+		url && (CONTROLLER_PATTERN==~url.file ||
+				SERVICE_PATTERN==~url.file ||
+				BOOTSTRAP_PATTERN==~url.file ||
+				DOMAIN_PATTERN==~url.file
+		)
 	}
 
 	@Override
