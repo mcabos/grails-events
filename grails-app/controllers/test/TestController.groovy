@@ -25,7 +25,7 @@ class TestController {
 	def instanceEventsApi
 
 	def onTest() {
-		instanceEventsApi.on(this, 'test') {
+		instanceEventsApi.on('test') {
 			reply it
 		}
 		render ' on test '
@@ -33,11 +33,11 @@ class TestController {
 
 	def test() {
 		//tasks test: Book.async.list()
-		instanceEventsApi.event ( this, 'test', 1 ) {
+		instanceEventsApi.event ('test', 1 ) {
 			println it
 		}
 
-		instanceEventsApi.withStream(this) {
+		instanceEventsApi.withStream {
 			event(this, 'test', 1) {
 				println '1x '+ it
 			}

@@ -47,34 +47,13 @@ class EventsApi {
 	GroovyEnvironment groovyEnvironment
 	Reactor appReactor
 
-	Reactor newReactor(instance) {
-		Reactors.reactor().env(groovyEnvironment.environment()).get()
-	}
-
-	Reactor newReactor(instance, String namespace) {
-		def r = Reactors.reactor().env(groovyEnvironment.environment()).get()
-		groovyEnvironment[namespace] = r
-		r
-	}
-
-	private WithStream newStream(Deferred d, Closure c){
-		def withStream = new WithStream(d)
-		withStream.appReactor = appReactor
-		withStream.groovyEnvironment = groovyEnvironment
-		c.delegate = withStream
-		c.resolveStrategy = Closure.DELEGATE_FIRST
-		c.call()
-		withStream
-	}
-
-	Stream<?> withStream(instance, Deferred<?, Stream<?>> s,
+	Stream<?> withStream(instance = null, Deferred<?, Stream<?>> s,
 	                     @DelegatesTo(strategy = Closure.DELEGATE_FIRST, value = WithStream) Closure c) {
 		newStream(s, c)
 		s.compose()
 	}
 
-
-	Stream<?> withStream(instance, @DelegatesTo(strategy = Closure.DELEGATE_FIRST,
+	Stream<?> withStream(instance = null, @DelegatesTo(strategy = Closure.DELEGATE_FIRST,
 			value = WithStream) Closure c) {
 
 		def deferred = Streams.<?> defer().env(groovyEnvironment.environment()).get()
@@ -84,21 +63,7 @@ class EventsApi {
 		stream
 	}
 
-	void event(instance, key,
-	           @DelegatesTo(strategy = Closure.DELEGATE_FIRST,
-			           value = ClosureEventConsumer)
-	           Closure callback) {
-		event(instance, key, null, null, callback)
-	}
-
-	void event(instance, key, data,
-	           @DelegatesTo(strategy = Closure.DELEGATE_FIRST,
-			           value = ClosureEventConsumer)
-	           Closure callback) {
-		event(instance, key, data, null, callback)
-	}
-
-	void event(instance, Map args,
+	void event(instance = null, Map args,
 	           @DelegatesTo(strategy = Closure.DELEGATE_FIRST,
 			           value = ClosureEventConsumer)
 	           Closure callback = null) {
@@ -111,7 +76,7 @@ class EventsApi {
 				new ClosureEventConsumer(callback))
 	}
 
-	void event(instance, key, data = null, Map params = null,
+	void event(instance = null, key = null, data = null,
 	           @DelegatesTo(strategy = Closure.DELEGATE_FIRST,
 			           value = ClosureEventConsumer)
 	           Closure callback = null) {
@@ -119,7 +84,7 @@ class EventsApi {
 				key,
 				data,
 				null,
-				params,
+				null,
 				callback ? new ClosureEventConsumer(callback) : null
 		)
 	}
@@ -139,18 +104,22 @@ class EventsApi {
 			reactor.on replyTo.t1, deferred
 		}
 
-		if (ev.replyTo)
-			reactor.send key, ev
-		else
-			reactor.notify key, ev
+		if (key) {
+			if (ev.replyTo)
+				reactor.send key, ev
+			else
+				reactor.notify key, ev
+		}else{
+				reactor.notify ev
+		}
 	}
 
-	Registration<Consumer> on(instance, key, @DelegatesTo(strategy = Closure.DELEGATE_FIRST,
+	Registration<Consumer> on(instance = null, key, @DelegatesTo(strategy = Closure.DELEGATE_FIRST,
 			value = ClosureEventConsumer.ReplyDecorator) Closure callback) {
 		_on(instance, appReactor, key, callback)
 	}
 
-	Registration<Consumer> on(instance, String namespace, key, @DelegatesTo(strategy = Closure.DELEGATE_FIRST,
+	Registration<Consumer> on(instance = null, String namespace, key, @DelegatesTo(strategy = Closure.DELEGATE_FIRST,
 			value = ClosureEventConsumer.ReplyDecorator) Closure callback) {
 		_on(instance, groovyEnvironment[namespace], key, callback)
 	}
@@ -164,12 +133,24 @@ class EventsApi {
 			reactor.on Selectors.$(key), callback
 	}
 
-	boolean removeListeners(instance, selector) {
-		appReactor.consumerRegistry.unregister(selector)
+
+	boolean removeConsumers(instance = null, String ns = null, selector) {
+		(ns ? groovyEnvironment[ns] : appReactor).consumerRegistry.unregister(selector)
 	}
 
-	int countListeners(instance, selector) {
-		appReactor.consumerRegistry.select(selector).size()
+	int countConsumers(instance = null, String ns = null, selector) {
+		(ns ? groovyEnvironment[ns] : appReactor).consumerRegistry.select(selector).size()
+	}
+
+
+	private WithStream newStream(Deferred d, Closure c) {
+		def withStream = new WithStream(d)
+		withStream.appReactor = appReactor
+		withStream.groovyEnvironment = groovyEnvironment
+		c.delegate = withStream
+		c.resolveStrategy = Closure.DELEGATE_FIRST
+		c.call()
+		withStream
 	}
 
 	private class WithStream extends EventsApi {
@@ -184,7 +165,7 @@ class EventsApi {
 			super.event(instance, key, data, ns, params, new Consumer<Event>() {
 				@Override
 				void accept(Event o) {
-					if(_deferred)
+					if (_deferred)
 						_deferred << o
 
 					deferred << o.data
