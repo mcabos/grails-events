@@ -18,7 +18,6 @@ import org.grails.plugins.events.reactor.api.EventsApi
 import reactor.core.configuration.DispatcherType
 
 doWithReactor = {
-	environment = {
 		environment {
 			defaultDispatcher = "grailsDispatcher"
 
@@ -26,7 +25,6 @@ doWithReactor = {
 				type = DispatcherType.RING_BUFFER
 				backlog = 512
 			}
-		}
 	}
 	reactor(EventsApi.GRAILS_REACTOR){
 	}

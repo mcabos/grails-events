@@ -34,6 +34,7 @@ class TestService {
 	@Selector ('test')
 	void test2(){
 		log.info 'test 2'
+		throw new Exception()
 	}
 
 	@Selector ('test')

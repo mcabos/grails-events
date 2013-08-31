@@ -118,7 +118,7 @@ class ConsumerBeanPostProcessor implements BeanPostProcessor, Ordered {
 			}
 
 			if (!selector) {
-				reactor.on(consumer)
+				replyToAnno ? reactor.on(consumer) :
 			} else {
 				reactor.on(selector, consumer)
 			}
