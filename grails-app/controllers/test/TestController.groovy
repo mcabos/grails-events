@@ -39,20 +39,22 @@ class TestController {
 			log.info 'eventCallback: ' + it
 		}
 
-		instanceEventsApi.event(for: 'grailsReactor', key: 'test', data: 1) {
+		instanceEventsApi.event(for:'grailsReactor', key:'test', data:1) {
 			log.info 'eventCallback-name: ' + it
 		}
 
 		instanceEventsApi.withStream {
-			event(key: 'test', data: 1) {
+			event(key:'test', data:1) {
 				log.info 'eventCallback2: ' + it
 			}
-		} << {
+		} consume {
 			log.info 'streamCallback:  ' + it
+		} when(Exception) {
+			log.info 'testException:'+it
 		}
 
 		def latch = new CountDownLatch(1)
-		instanceEventsApi.event(key: '/someUri', data: 1) {
+		instanceEventsApi.event(key:'/someUri', data:1) {
 			log.info 'uriCallback: ' + it
 			latch.countDown()
 		}
@@ -67,7 +69,9 @@ class TestController {
 		log.info 'final count:' + instanceEventsApi.countConsumers('test')
 
 		//tasks test: Book.async.list()
-		render 'test'
+		//task{
+			render 'test'
+		//}
 	}
 
 }

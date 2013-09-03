@@ -32,7 +32,7 @@ class TestService {
 	}
 
 	@Selector ('test')
-	void test2(){
+	void test2() throws Exception{
 		log.info 'test 2'
 		throw new Exception()
 	}

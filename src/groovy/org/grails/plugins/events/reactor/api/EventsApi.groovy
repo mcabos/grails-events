@@ -33,7 +33,10 @@ import reactor.event.selector.Selectors
 import reactor.event.support.EventConsumer
 import reactor.function.Consumer
 import reactor.groovy.config.GroovyEnvironment
+import reactor.groovy.support.ClosureConsumer
 import reactor.groovy.support.ClosureEventConsumer
+
+import java.lang.reflect.UndeclaredThrowableException
 /**
  * @author Stephane Maldini
  */
@@ -74,12 +77,19 @@ class EventsApi {
 			           value = ClosureEventConsumer)
 	           Closure callback = null) {
 		def namespace = args.remove('for') ?: args.remove('namespace')
+		def onError = args.remove('onError')
+		if(onError && Closure.isAssignableFrom(onError.class)){
+			onError = new ClosureConsumer((Closure)onError)
+		}
 		event(instance,
 				args.remove('key'),
 				args.remove('data'),
 				(String) namespace,
 				(Map) args.remove('params') ?: args,
-				new ClosureEventConsumer(callback))
+				new ClosureEventConsumer(callback),
+				(Consumer<Throwable>)onError
+		)
+
 	}
 
 	void event(instance, key = null, data = null,
@@ -91,15 +101,17 @@ class EventsApi {
 				data,
 				null,
 				null,
-				callback ? new ClosureEventConsumer(callback) : null
+				callback ? new ClosureEventConsumer(callback) : null,
+				null
 		)
 	}
 
 
-	protected void event(instance, key, data, String ns, Map params, Consumer<Event> deferred) {
+	protected void event(instance, key, data, String ns, Map params, Consumer<Event> deferred,
+	                     Consumer<Throwable> errorConsumer) {
 
 		final Event ev = Event.class.isAssignableFrom(data?.class) ? (Event) data :
-				new Event(params ? new Event.Headers(params) : null, data)
+				new Event(params ? new Event.Headers(params) : null, data, errorConsumer)
 
 		final reactor = ns ? groovyEnvironment[ns] : appReactor
 
@@ -167,7 +179,20 @@ class EventsApi {
 		}
 
 		@Override
-		protected void event(instance, key, data, String ns, Map params, Consumer<Event> _deferred) {
+		protected void event(instance, key, data, String ns, Map params, Consumer<Event> _deferred,
+		                     Consumer<Throwable> errorConsumer) {
+			if(!errorConsumer){
+				errorConsumer = new Consumer(){
+					@Override
+					void accept(throwable) {
+						if(UndeclaredThrowableException.class.isAssignableFrom(throwable.class)){
+							deferred.accept(((UndeclaredThrowableException)throwable).cause)
+						}else{
+							deferred.accept((Throwable)throwable)
+						}
+					}
+				}
+			}
 			super.event(instance, key, data, ns, params, new Consumer<Event>() {
 				@Override
 				void accept(Event o) {
@@ -176,7 +201,7 @@ class EventsApi {
 
 					deferred << o.data
 				}
-			})
+			}, errorConsumer)
 		}
 	}
 }
