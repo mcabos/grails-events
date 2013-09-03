@@ -85,7 +85,7 @@ class ConsumerBeanPostProcessor extends reactor.spring.beans.factory.config.Cons
 
 	@Override
 	protected Object parseReplyTo(ReplyTo selector, Object bean) {
-		selector.value()
+		selector.value() ?: null
 	}
 
 }

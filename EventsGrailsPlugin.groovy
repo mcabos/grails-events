@@ -39,6 +39,7 @@ class EventsGrailsPlugin {
 			"grails-app/taglib",
 			"grails-app/utils",
 			"grails-app/*/test/*",
+			"grails-app/conf/TestEvents.groovy",
 			"web-app",
 			"lib",
 			"scripts",

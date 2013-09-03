@@ -107,15 +107,20 @@ class ReactorConfigPostProcessor implements Ordered, BeanFactoryPostProcessor {
 			dslInstance.binding["grailsApplication"] = grailsApplication
 			dslInstance.binding["ctx"] = grailsApplication.mainContext
 			dslInstance.binding["config"] = grailsApplication.config
+			dslInstance.binding["config"] = grailsApplication.config
 			dslInstance.run()
-			Closure dsl = dslInstance.binding['doWithReactor'] ? dslInstance.binding['doWithReactor'] as Closure : null
+			Closure dsl
+			try{
+			dsl = dslInstance.binding['doWithReactor'] ? dslInstance.binding['doWithReactor'] as Closure : null
+			}catch(e){}
 			if (dsl) {
 				i++
 				pluginName = dslInstance?.getClass()?.getAnnotation(GrailsPlugin)?.name()
 				current = GroovyEnvironment.create dsl
 				sortedEnvs[pluginName ? -i : i] = current
 			} else {
-				log.warn "Tried to load events data from artefact [${artefact.clazz}] but no 'events' value was found in the " +
+				log.warn "Tried to load events data from artefact [${artefact.clazz}] but no 'doWithReactor' value was found " +
+						"in the " +
 						"script"
 			}
 		}
