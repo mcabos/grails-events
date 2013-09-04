@@ -51,7 +51,7 @@ class ReactorConfigPostProcessor implements Ordered, BeanFactoryPostProcessor {
 
 	@Override
 	void postProcessBeanFactory(ConfigurableListableBeanFactory configurableListableBeanFactory) throws BeansException {
-		if (fixGroovyExtensions){
+		if (fixGroovyExtensions) {
 			fixGroovyExtensions()
 			fixGroovyExtensions = false
 		}
@@ -92,39 +92,24 @@ class ReactorConfigPostProcessor implements Ordered, BeanFactoryPostProcessor {
 	}
 
 	GroovyEnvironment reloadConfiguration(GrailsApplication grailsApplication, EventsApi eventsApi) {
-		Script dslInstance
 		GroovyEnvironment current, previous
-		Map<Integer, GroovyEnvironment> sortedEnvs = [:]
 		String pluginName
+		final Map<Integer, GroovyEnvironment> sortedEnvs = [:]
+		final Map<GrailsClass, GroovyEnvironment> environmentMap = [:]
 		int i = 0
+		def dsl
 
 		for (artefact in grailsApplication.getArtefacts(EventsArtefactHandler.TYPE)) {
-			if (log.debugEnabled) {
-				log.debug "Loading events artefact [${artefact.clazz}] (class instance hash: ${System.identityHashCode(artefact.clazz)})"
-			}
-
-			dslInstance = artefact.clazz.newInstance() as Script
-			dslInstance.binding["grailsApplication"] = grailsApplication
-			dslInstance.binding["ctx"] = grailsApplication.mainContext
-			dslInstance.binding["config"] = grailsApplication.config
-			dslInstance.binding["config"] = grailsApplication.config
-			dslInstance.run()
-			Closure dsl
-			try{
-			dsl = dslInstance.binding['doWithReactor'] ? dslInstance.binding['doWithReactor'] as Closure : null
-			}catch(e){}
+			dsl = parseConfiguration artefact, grailsApplication, environmentMap
+			current = environmentMap[artefact]
+			i++
 			if (dsl) {
-				i++
-				pluginName = dslInstance?.getClass()?.getAnnotation(GrailsPlugin)?.name()
-				current = GroovyEnvironment.create dsl
+				pluginName = dsl.getClass()?.getAnnotation(GrailsPlugin)?.name()
 				sortedEnvs[pluginName ? -i : i] = current
-			} else {
-				log.warn "Tried to load events data from artefact [${artefact.clazz}] but no 'doWithReactor' value was found " +
-						"in the " +
-						"script"
 			}
 		}
 
+		previous = current
 		for (env in sortedEnvs.sort()) {
 			current = ((Map.Entry<Integer, GroovyEnvironment>) env).value
 			if (previous)
@@ -141,6 +126,81 @@ class ReactorConfigPostProcessor implements Ordered, BeanFactoryPostProcessor {
 			Promises.promiseFactory = new ReactorPromiseFactory(current.environment())
 
 		current
+	}
+
+	static private Closure parseConfiguration(GrailsClass artefact, GrailsApplication grailsApplication,
+	                                          Map<GrailsClass, GroovyEnvironment> environmentMap) {
+
+		if(environmentMap[artefact]) return null
+
+		if (log.debugEnabled) {
+			log.debug "Loading events artefact [${artefact.clazz}] (class instance hash: ${System.identityHashCode(artefact.clazz)})"
+		}
+
+		def dslInstance = artefact.clazz.newInstance() as Script
+		dslInstance.binding["grailsApplication"] = grailsApplication
+		dslInstance.binding["ctx"] = grailsApplication.mainContext
+		dslInstance.binding["config"] = grailsApplication.config
+		dslInstance.binding["config"] = grailsApplication.config
+		dslInstance.run()
+		Closure dsl
+
+		try {
+			dsl = (Closure) dslInstance.binding['doWithReactor']
+		} catch (e) {
+		}
+
+		if (dsl) {
+			def includes
+			try {
+				includes = dslInstance.binding['includes']
+			} catch (e) {
+			}
+
+			List<GroovyEnvironment> groovyEnvironments = []
+			if (includes) {
+				Set<GrailsClass> grailsClasses = parseIncludes(includes, grailsApplication)
+
+				for (grailsClass in grailsClasses) {
+					if(!environmentMap[grailsClass]){
+						environmentMap[grailsClass] = GroovyEnvironment.create(
+								parseConfiguration(grailsClass, grailsApplication, environmentMap)
+						)
+					}
+					groovyEnvironments << environmentMap[grailsClass]
+				}
+			}
+			environmentMap[artefact] = GroovyEnvironment.create(dsl).include(groovyEnvironments as GroovyEnvironment[])
+
+		} else {
+			log.warn "Tried to load events data from artefact [${artefact.clazz}] but no 'doWithReactor' value was found " +
+					"in the " +
+					"script"
+		}
+		dsl
+
+	}
+
+	static private void findArtefact(String o, Set<GrailsClass> grailsClasses, GrailsApplication grailsApplication){
+		def grailsClass = grailsApplication.getArtefactByLogicalPropertyName(EventsArtefactHandler.TYPE,
+				o.trim())
+		if (grailsClass) grailsClasses << grailsClass else log.error "Artefact [$o] not found"
+	}
+
+	static private Set<GrailsClass> parseIncludes(includes, GrailsApplication grailsApplication) {
+		if (!includes) return null
+		Set<GrailsClass> grailsClasses = []
+		if (Collection.isAssignableFrom(includes.getClass())) {
+			def c = (Collection) includes
+			for (e in c) {
+				findArtefact(e.toString(), grailsClasses, grailsApplication)
+			}
+		} else {
+			for (s in includes.toString().tokenize(',')) {
+				findArtefact(s, grailsClasses, grailsApplication)
+			}
+		}
+		grailsClasses
 	}
 
 	static private void fixGroovyExtensions() {
