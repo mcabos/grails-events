@@ -111,7 +111,7 @@ class EventsApi {
 	}
 
 
-	protected void event(instance, key, data, String ns, Map params, Consumer<Event> deferred,
+	void event(instance, key, data, String ns, Map params, Consumer<Event> deferred,
 	                     Consumer<Throwable> errorConsumer) {
 
 		final Event ev = Event.class.isAssignableFrom(data?.class) ? (Event) data :
@@ -183,7 +183,7 @@ class EventsApi {
 		}
 
 		@Override
-		protected void event(instance, key, data, String ns, Map params, Consumer<Event> _deferred,
+		void event(instance, key, data, String ns, Map params, Consumer<Event> _deferred,
 		                     Consumer<Throwable> errorConsumer) {
 			if(!errorConsumer){
 				errorConsumer = new Consumer(){

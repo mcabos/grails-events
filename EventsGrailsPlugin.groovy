@@ -50,8 +50,10 @@ class EventsGrailsPlugin {
 	]
 
 	def title = "Grails Events Plugin" // Headline display name of the plugin
-	def author = "Stephane Maldini"
-	def authorEmail = "smaldini@gopivotal.com"
+	//def author = "Stephane Maldini"
+	//def authorEmail = "smaldini@gopivotal.com"
+	def developers = [ [name: "Stephane Maldini", email: "smaldini@gopivotal.com"] ]
+
 	def description = '''\
 Grails Events based on Reactor API
 '''

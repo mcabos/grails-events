@@ -35,7 +35,7 @@ class TestController {
 	}
 
 	def test() {
-		instanceEventsApi.event('test', 1) {
+		instanceEventsApi.event(this, 'test', 1) {
 			log.info 'eventCallback: ' + it
 		}
 
