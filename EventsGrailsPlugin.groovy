@@ -13,19 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-import grails.async.Promises
-import grails.util.GrailsNameUtils
-import org.codehaus.groovy.grails.commons.ServiceArtefactHandler
 import org.grails.plugins.events.reactor.api.EventsApi
 import org.grails.plugins.events.reactor.configuration.ConsumerBeanPostProcessor
 import org.grails.plugins.events.reactor.configuration.EventsArtefactHandler
 import org.grails.plugins.events.reactor.configuration.ReactorConfigPostProcessor
 import org.grails.plugins.events.reactor.gorm.GormReactorBridge
-import org.grails.plugins.events.reactor.promise.ReactorPromiseFactory
 import org.springframework.context.ApplicationContext
-import reactor.core.Environment
-
 
 class EventsGrailsPlugin {
 	def version = "1.0.0.BUILD-SNAPSHOT"

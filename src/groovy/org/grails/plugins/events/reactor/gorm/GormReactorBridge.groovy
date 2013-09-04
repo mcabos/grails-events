@@ -1,18 +1,8 @@
 package org.grails.plugins.events.reactor.gorm
 
 import groovy.transform.CompileStatic
-import groovy.util.logging.Log4j
-import org.apache.log4j.Logger
-import org.grails.datastore.mapping.engine.event.AbstractPersistenceEvent
-import org.grails.datastore.mapping.engine.event.PostInsertEvent
-import org.grails.datastore.mapping.engine.event.PostUpdateEvent
-import org.grails.datastore.mapping.engine.event.PreDeleteEvent
-import org.grails.datastore.mapping.engine.event.PreInsertEvent
-import org.grails.datastore.mapping.engine.event.PreUpdateEvent
-import org.grails.datastore.mapping.engine.event.SaveOrUpdateEvent
-import org.grails.datastore.mapping.engine.event.ValidationEvent
+import org.grails.datastore.mapping.engine.event.*
 import org.grails.plugins.events.reactor.api.EventsApi
-import org.hibernate.AssertionFailure
 import org.hibernate.event.PostDeleteEvent
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.ApplicationEvent
@@ -20,7 +10,6 @@ import org.springframework.context.ApplicationListener
 import reactor.core.Reactor
 
 import javax.annotation.PostConstruct
-
 /**
  * @author Stephane Maldini
  */
@@ -59,12 +48,9 @@ class GormReactorBridge implements ApplicationListener<ApplicationEvent> {
 			if (topic) {
 				AbstractPersistenceEvent persistenceEvent = ((AbstractPersistenceEvent) applicationEvent)
 				for (r in gormReactors) {
-					try {
 						r.send(topic, persistenceEvent.entityObject ?: persistenceEvent.entityAccess?.entity) {
 							processCancel(persistenceEvent, it)
 						}
-					} catch (AssertionFailure e) {
-					}
 				}
 			}
 		}

@@ -32,7 +32,7 @@ class TestService {
 	}
 
 	@Selector(reactor = 'someGormReactor')
-	void beforeInsert(Book b){
+	void beforeValidate(Book b){
 		log.info 'test 1-before:'+b
 
 		assert b.title == 'lol'
@@ -47,7 +47,8 @@ class TestService {
 	@Selector ('test')
 	@ReplyTo
 	void test3(){
-		log.info 'test 3'
+		Book.get(1)?.title = 'test'
+		log.info 'test 3:'+Book.list().title
 	}
 
 	@Selector ('test')
