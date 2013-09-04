@@ -131,7 +131,7 @@ class ReactorConfigPostProcessor implements Ordered, BeanFactoryPostProcessor {
 	static private Closure parseConfiguration(GrailsClass artefact, GrailsApplication grailsApplication,
 	                                          Map<GrailsClass, GroovyEnvironment> environmentMap) {
 
-		if(environmentMap[artefact]) return null
+		if (environmentMap[artefact]) return null
 
 		if (log.debugEnabled) {
 			log.debug "Loading events artefact [${artefact.clazz}] (class instance hash: ${System.identityHashCode(artefact.clazz)})"
@@ -141,7 +141,7 @@ class ReactorConfigPostProcessor implements Ordered, BeanFactoryPostProcessor {
 		dslInstance.binding["grailsApplication"] = grailsApplication
 		dslInstance.binding["ctx"] = grailsApplication.mainContext
 		dslInstance.binding["config"] = grailsApplication.config
-		dslInstance.binding["config"] = grailsApplication.config
+		dslInstance.binding["log"] = Logger.getLogger(artefact.clazz)
 		dslInstance.run()
 		Closure dsl
 
@@ -162,7 +162,7 @@ class ReactorConfigPostProcessor implements Ordered, BeanFactoryPostProcessor {
 				Set<GrailsClass> grailsClasses = parseIncludes(includes, grailsApplication)
 
 				for (grailsClass in grailsClasses) {
-					if(!environmentMap[grailsClass]){
+					if (!environmentMap[grailsClass]) {
 						environmentMap[grailsClass] = GroovyEnvironment.create(
 								parseConfiguration(grailsClass, grailsApplication, environmentMap)
 						)
@@ -181,10 +181,13 @@ class ReactorConfigPostProcessor implements Ordered, BeanFactoryPostProcessor {
 
 	}
 
-	static private void findArtefact(String o, Set<GrailsClass> grailsClasses, GrailsApplication grailsApplication){
-		def grailsClass = grailsApplication.getArtefactByLogicalPropertyName(EventsArtefactHandler.TYPE,
-				o.trim())
-		if (grailsClass) grailsClasses << grailsClass else log.error "Artefact [$o] not found"
+	static private void findArtefact(String o, Set<GrailsClass> grailsClasses, GrailsApplication grailsApplication) {
+		GrailsClass grailsClass =
+				grailsApplication.getArtefactByLogicalPropertyName(EventsArtefactHandler.TYPE, o.trim())
+		if (grailsClass)
+			grailsClasses << grailsClass
+		else
+			log.error "Artefact [$o] not found"
 	}
 
 	static private Set<GrailsClass> parseIncludes(includes, GrailsApplication grailsApplication) {

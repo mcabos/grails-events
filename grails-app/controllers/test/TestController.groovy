@@ -61,6 +61,8 @@ class TestController {
 
 		latch.await(5, TimeUnit.SECONDS)
 
+		new Book(title: 'lol').save()
+
 		log.info 'count:' + instanceEventsApi.countConsumers('test')
 		log.info 'remove test consumers:' + instanceEventsApi.removeConsumers('test')
 		log.info 'remove /test consumers:' + instanceEventsApi.removeConsumers('/someUri')
@@ -70,7 +72,7 @@ class TestController {
 
 		//tasks test: Book.async.list()
 		//task{
-			render 'test'
+			render Book.list()
 		//}
 	}
 

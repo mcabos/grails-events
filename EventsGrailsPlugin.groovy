@@ -21,6 +21,7 @@ import org.grails.plugins.events.reactor.api.EventsApi
 import org.grails.plugins.events.reactor.configuration.ConsumerBeanPostProcessor
 import org.grails.plugins.events.reactor.configuration.EventsArtefactHandler
 import org.grails.plugins.events.reactor.configuration.ReactorConfigPostProcessor
+import org.grails.plugins.events.reactor.gorm.GormReactorBridge
 import org.grails.plugins.events.reactor.promise.ReactorPromiseFactory
 import org.springframework.context.ApplicationContext
 import reactor.core.Environment
@@ -73,8 +74,12 @@ Grails Events based on Reactor API
 
 	def doWithSpring = {
 		reactorBeanPostProcessor(ConsumerBeanPostProcessor)
-		reactorConfigPostProcessor(ReactorConfigPostProcessor){
+		reactorConfigPostProcessor(ReactorConfigPostProcessor) {
 			fixGroovyExtensions = application.config.grails.events.fixGroovyExtensions ?: true
+		}
+
+		if (!application.config.grails.events.gorm.disable) {
+			reactorGormBridge(GormReactorBridge)
 		}
 
 		instanceEventsApi(EventsApi)
@@ -91,10 +96,17 @@ Grails Events based on Reactor API
 		if (event.source instanceof Class) {
 			def ctx = event.application.mainContext
 			if (application.isServiceClass(event.source)) {
-				ctx.reactorConfigPostProcessor.scanServices(ctx, event.source)
+				synchronized (ctx) {
+					ctx.reactorConfigPostProcessor.scanServices(ctx, event.source)
+				}
 			} else if (application.isArtefactOfType(EventsArtefactHandler.TYPE, event.source)) {
-				application.addArtefact(EventsArtefactHandler.TYPE, event.source)
-				ctx.reactorConfigPostProcessor.initContext(ctx)
+				synchronized (ctx) {
+					application.addArtefact(EventsArtefactHandler.TYPE, event.source)
+					ctx.reactorConfigPostProcessor.initContext(ctx)
+					if (!application.config.grails.events.gorm.disable) {
+						ctx.reactorGormBridge.init()
+					}
+				}
 			}
 
 		}

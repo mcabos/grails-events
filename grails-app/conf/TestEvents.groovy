@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
+
 import org.grails.plugins.events.reactor.api.EventsApi
-import reactor.core.configuration.DispatcherType
+import reactor.event.dispatch.SynchronousDispatcher
 
 //includes = 'default'
 includes = ['default']
@@ -27,5 +28,10 @@ doWithReactor = {
 				println 'lol'
 			}
 		}
+	}
+	reactor('someGormReactor'){
+		dispatcher = new SynchronousDispatcher()
+
+		ext 'gorm', true
 	}
 }

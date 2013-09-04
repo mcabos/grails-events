@@ -27,8 +27,15 @@ import reactor.spring.annotation.SelectorType
 class TestService {
 
 	@Selector
-	void test(){
-		log.info 'test 1'
+	void afterInsert(Book b){
+		log.info 'test 1:'+b
+	}
+
+	@Selector(reactor = 'someGormReactor')
+	void beforeInsert(Book b){
+		log.info 'test 1-before:'+b
+
+		assert b.title == 'lol'
 	}
 
 	@Selector ('test')

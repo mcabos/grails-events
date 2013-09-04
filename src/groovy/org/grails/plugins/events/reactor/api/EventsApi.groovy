@@ -50,6 +50,10 @@ class EventsApi {
 	GroovyEnvironment groovyEnvironment
 	Reactor appReactor
 
+	Reactor reactor(instance = null, String name = null){
+		name ? groovyEnvironment[name] : appReactor
+	}
+
 	Stream<?> withStream(instance = null, Deferred<?, Stream<?>> s,
 	                     @DelegatesTo(strategy = Closure.DELEGATE_FIRST, value = WithStream) Closure c) {
 		newStream(s, c)
@@ -143,10 +147,10 @@ class EventsApi {
 	}
 
 	private Registration<Consumer> _on(instance, Reactor reactor, key, Closure callback) {
-		if (key instanceof String)
+		if (key instanceof Selector)
 			reactor.on key, callback
-		else if (key instanceof Selector)
-			reactor.on key, callback
+		else if (key instanceof Class)
+			reactor.on Selectors.T((Class)key), callback
 		else
 			reactor.on Selectors.$(key), callback
 	}
