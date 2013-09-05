@@ -77,7 +77,7 @@ class EventsApi {
 				args.remove('data'),
 				(String) namespace,
 				(Map) args.remove('params') ?: args,
-				new ClosureEventConsumer(callback),
+				callback ? new ClosureEventConsumer(callback) : null,
 				(Consumer<Throwable>)onError
 		)
 
