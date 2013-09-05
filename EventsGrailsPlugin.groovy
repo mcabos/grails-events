@@ -73,7 +73,7 @@ Grails Events based on Reactor API
 			fixGroovyExtensions = application.config.grails.events.fixGroovyExtensions ?: true
 		}
 
-		grailsEvents(EventsApi)
+		instanceEventsApi(EventsApi)
 
 		if (!application.config.grails.events.gorm.disable) {
 			reactorGormBridge(GormReactorBridge)

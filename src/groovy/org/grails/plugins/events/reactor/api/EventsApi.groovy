@@ -17,20 +17,14 @@ package org.grails.plugins.events.reactor.api
 
 import groovy.transform.CompileStatic
 import org.apache.log4j.Logger
-import org.codehaus.groovy.grails.commons.GrailsApplication
-import org.grails.plugins.events.reactor.configuration.EventsArtefactHandler
-import reactor.core.Environment
 import reactor.core.Reactor
 import reactor.core.composable.Deferred
-import reactor.core.composable.Promise
 import reactor.core.composable.Stream
 import reactor.core.composable.spec.Streams
-import reactor.core.spec.Reactors
 import reactor.event.Event
 import reactor.event.registry.Registration
 import reactor.event.selector.Selector
 import reactor.event.selector.Selectors
-import reactor.event.support.EventConsumer
 import reactor.function.Consumer
 import reactor.groovy.config.GroovyEnvironment
 import reactor.groovy.support.ClosureConsumer
@@ -106,7 +100,7 @@ class EventsApi {
 	void event(key, data, String ns, Map params, Consumer<Event> deferred,
 	                     Consumer<Throwable> errorConsumer) {
 
-		final Event ev = Event.class.isAssignableFrom(data?.class) ? (Event) data :
+		final Event ev = data && Event.class.isAssignableFrom(data?.class) ? (Event) data :
 				new Event(params ? new Event.Headers(params) : null, data, errorConsumer)
 
 		final reactor = ns ? groovyEnvironment[ns] : appReactor

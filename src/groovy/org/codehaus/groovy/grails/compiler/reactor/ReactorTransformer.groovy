@@ -21,27 +21,39 @@ import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.AnnotationNode
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.MethodNode
+import org.codehaus.groovy.ast.Parameter
+import org.codehaus.groovy.ast.expr.ArgumentListExpression
+import org.codehaus.groovy.ast.expr.Expression
+import org.codehaus.groovy.ast.expr.MethodCallExpression
+import org.codehaus.groovy.ast.expr.VariableExpression
+import org.codehaus.groovy.ast.stmt.BlockStatement
+import org.codehaus.groovy.ast.stmt.IfStatement
+import org.codehaus.groovy.ast.stmt.ThrowStatement
 import org.codehaus.groovy.classgen.GeneratorContext
 import org.codehaus.groovy.control.SourceUnit
 import org.codehaus.groovy.grails.commons.BootstrapArtefactHandler
 import org.codehaus.groovy.grails.commons.ControllerArtefactHandler
 import org.codehaus.groovy.grails.commons.DomainClassArtefactHandler
+import org.codehaus.groovy.grails.commons.GrailsClassUtils
 import org.codehaus.groovy.grails.commons.ServiceArtefactHandler
 import org.codehaus.groovy.grails.compiler.injection.AbstractGrailsArtefactTransformer
 import org.codehaus.groovy.grails.compiler.injection.AnnotatedClassInjector
 import org.codehaus.groovy.grails.compiler.injection.AstTransformer
 import org.codehaus.groovy.grails.compiler.injection.GrailsASTUtils
+import org.codehaus.groovy.grails.compiler.injection.GrailsArtefactClassInjector
 import org.codehaus.groovy.grails.compiler.injection.GrailsDomainClassInjector
 import org.codehaus.groovy.grails.io.support.GrailsResourceUtils
 import org.codehaus.groovy.transform.ASTTransformation
 import org.codehaus.groovy.transform.GroovyASTTransformation
 import org.grails.plugins.events.reactor.api.EventsApi
+
+import java.lang.reflect.Modifier
 /**
  * @author Stephane Maldini
  */
 @CompileStatic
 @GroovyASTTransformation
-class ReactorTransformer extends AbstractGrailsArtefactTransformer implements ASTTransformation{
+class ReactorTransformer extends AbstractGrailsArtefactTransformer implements ASTTransformation {
 
 	static private CONTROLLER_PATTERN =
 			/.+\/$GrailsResourceUtils.GRAILS_APP_DIR\/controllers\/(.+)Controller\.groovy/
@@ -52,6 +64,7 @@ class ReactorTransformer extends AbstractGrailsArtefactTransformer implements AS
 	/*static private DOMAIN_PATTERN =
 			/.+\/$GrailsResourceUtils.GRAILS_APP_DIR\/domain\/(.+)\.groovy/
 */
+
 	@Override
 	Class<?> getInstanceImplementation() {
 		return EventsApi.class
@@ -60,11 +73,6 @@ class ReactorTransformer extends AbstractGrailsArtefactTransformer implements AS
 	@Override
 	Class<?> getStaticImplementation() {
 		null  // No static api
-	}
-
-	@Override
-	protected boolean isCandidateInstanceMethod(ClassNode classNode, MethodNode declaredMethod) {
-		false // don't include instance methods
 	}
 
 	boolean shouldInject(URL url) {
@@ -114,4 +122,14 @@ class ReactorTransformer extends AbstractGrailsArtefactTransformer implements AS
 		}
 	}
 
+	@Override
+	protected boolean isCandidateInstanceMethod(ClassNode classNode, MethodNode declaredMethod) {
+		return GrailsASTUtils.isCandidateMethod(declaredMethod);
+	}
+
+	@Override
+	protected void addDelegateInstanceMethod(ClassNode classNode, Expression delegate, MethodNode declaredMethod, AnnotationNode markerAnnotation, Map<String, ClassNode> genericsPlaceholders) {
+		GrailsASTUtils.addDelegateInstanceMethod(classNode, delegate, declaredMethod, getMarkerAnnotation(), false,
+				genericsPlaceholders);
+	}
 }

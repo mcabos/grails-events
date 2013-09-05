@@ -24,27 +24,27 @@ import static grails.async.Promises.*
  */
 class TestController {
 
-	def grailsEvents
+	def instanceEventsApi
 
 	def reactorConfigPostProcessor
 
 	def onTest() {
-		grailsEvents.on('test') {
+		instanceEventsApi.on('test') {
 			reply it
 		}
 		render ' on test '
 	}
 
 	def test() {
-		grailsEvents.event('test', 1) {
+		instanceEventsApi.event('test', 1) {
 			log.info 'eventCallback: ' + it
 		}
 
-		grailsEvents.event(for:'grailsReactor', key:'test', data:1) {
+		instanceEventsApi.event(for:'grailsReactor', key:'test', data:1) {
 			log.info 'eventCallback-name: ' + it
 		}
 
-		grailsEvents.withStream {
+		instanceEventsApi.withStream {
 			event(key:'test', data:1) {
 				log.info 'eventCallback2: ' + it
 			}
@@ -55,7 +55,7 @@ class TestController {
 		}
 
 		def latch = new CountDownLatch(1)
-		grailsEvents.event(key:'/someUri', data:1) {
+		instanceEventsApi.event(key:'/someUri', data:1) {
 			log.info 'uriCallback: ' + it
 			latch.countDown()
 		}
@@ -64,12 +64,12 @@ class TestController {
 
 		new Book(title: 'lold').save()
 
-		log.info 'count:' + grailsEvents.countConsumers('test')
-		log.info 'remove test consumers:' + grailsEvents.removeConsumers('test')
-		log.info 'remove /test consumers:' + grailsEvents.removeConsumers('/someUri')
-		log.info 'recount:' + grailsEvents.countConsumers('test')
+		log.info 'count:' + instanceEventsApi.countConsumers('test')
+		log.info 'remove test consumers:' + instanceEventsApi.removeConsumers('test')
+		log.info 'remove /test consumers:' + instanceEventsApi.removeConsumers('/someUri')
+		log.info 'recount:' + instanceEventsApi.countConsumers('test')
 		reactorConfigPostProcessor.scanServices(applicationContext, TestService)
-		log.info 'final count:' + grailsEvents.countConsumers('test')
+		log.info 'final count:' + instanceEventsApi.countConsumers('test')
 
 		//tasks test: Book.async.list()
 		//task{
