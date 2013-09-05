@@ -41,8 +41,7 @@ import org.grails.plugins.events.reactor.api.EventsApi
  */
 @CompileStatic
 @GroovyASTTransformation
-class ReactorTransformer extends AbstractGrailsArtefactTransformer implements ASTTransformation,
-		GrailsDomainClassInjector {
+class ReactorTransformer extends AbstractGrailsArtefactTransformer implements ASTTransformation{
 
 	static private CONTROLLER_PATTERN =
 			/.+\/$GrailsResourceUtils.GRAILS_APP_DIR\/controllers\/(.+)Controller\.groovy/
@@ -61,6 +60,11 @@ class ReactorTransformer extends AbstractGrailsArtefactTransformer implements AS
 	@Override
 	Class<?> getStaticImplementation() {
 		null  // No static api
+	}
+
+	@Override
+	protected boolean isCandidateInstanceMethod(ClassNode classNode, MethodNode declaredMethod) {
+		false // don't include instance methods
 	}
 
 	boolean shouldInject(URL url) {
@@ -90,8 +94,7 @@ class ReactorTransformer extends AbstractGrailsArtefactTransformer implements AS
 
 	@Override
 	String[] getArtefactTypes() {
-		[ControllerArtefactHandler.TYPE, DomainClassArtefactHandler.TYPE, BootstrapArtefactHandler.TYPE,
-				ServiceArtefactHandler.TYPE] as String[]
+		[ControllerArtefactHandler.TYPE, BootstrapArtefactHandler.TYPE, ServiceArtefactHandler.TYPE] as String[]
 	}
 
 	@Override
@@ -111,8 +114,4 @@ class ReactorTransformer extends AbstractGrailsArtefactTransformer implements AS
 		}
 	}
 
-	@Override
-	void performInjectionOnAnnotatedEntity(ClassNode classNode) {
-
-	}
 }

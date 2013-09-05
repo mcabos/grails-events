@@ -50,17 +50,17 @@ class EventsApi {
 	GroovyEnvironment groovyEnvironment
 	Reactor appReactor
 
-	Reactor reactor(instance = null, String name = null){
+	Reactor reactor(String name = null){
 		name ? groovyEnvironment[name] : appReactor
 	}
 
-	Stream<?> withStream(instance = null, Deferred<?, Stream<?>> s,
+	Stream<?> withStream(Deferred<?, Stream<?>> s,
 	                     @DelegatesTo(strategy = Closure.DELEGATE_FIRST, value = WithStream) Closure c) {
 		newStream(s, c)
 		s.compose()
 	}
 
-	Stream<?> withStream(instance = null, @DelegatesTo(strategy = Closure.DELEGATE_FIRST,
+	Stream<?> withStream(@DelegatesTo(strategy = Closure.DELEGATE_FIRST,
 			value = WithStream) Closure c) {
 
 		def deferred = Streams.<?> defer().env(groovyEnvironment.environment()).get()
@@ -74,19 +74,12 @@ class EventsApi {
 	           @DelegatesTo(strategy = Closure.DELEGATE_FIRST,
 			           value = ClosureEventConsumer)
 	           Closure callback = null) {
-		event(null, args, callback)
-	}
-	void event(instance, Map args,
-	           @DelegatesTo(strategy = Closure.DELEGATE_FIRST,
-			           value = ClosureEventConsumer)
-	           Closure callback = null) {
 		def namespace = args.remove('for') ?: args.remove('namespace')
 		def onError = args.remove('onError')
 		if(onError && Closure.isAssignableFrom(onError.class)){
 			onError = new ClosureConsumer((Closure)onError)
 		}
-		event(instance,
-				args.remove('key'),
+		event(args.remove('key'),
 				args.remove('data'),
 				(String) namespace,
 				(Map) args.remove('params') ?: args,
@@ -96,12 +89,11 @@ class EventsApi {
 
 	}
 
-	void event(instance, key = null, data = null,
+	void event(key = null, data = null,
 	           @DelegatesTo(strategy = Closure.DELEGATE_FIRST,
 			           value = ClosureEventConsumer)
 	           Closure callback = null) {
-		event(instance,
-				key,
+		event(key,
 				data,
 				null,
 				null,
@@ -111,7 +103,7 @@ class EventsApi {
 	}
 
 
-	void event(instance, key, data, String ns, Map params, Consumer<Event> deferred,
+	void event(key, data, String ns, Map params, Consumer<Event> deferred,
 	                     Consumer<Throwable> errorConsumer) {
 
 		final Event ev = Event.class.isAssignableFrom(data?.class) ? (Event) data :
@@ -136,17 +128,17 @@ class EventsApi {
 		}
 	}
 
-	Registration<Consumer> on(instance = null, key, @DelegatesTo(strategy = Closure.DELEGATE_FIRST,
+	Registration<Consumer> on(key, @DelegatesTo(strategy = Closure.DELEGATE_FIRST,
 			value = ClosureEventConsumer.ReplyDecorator) Closure callback) {
-		_on(instance, appReactor, key, callback)
+		_on(appReactor, key, callback)
 	}
 
-	Registration<Consumer> on(instance = null, String namespace, key, @DelegatesTo(strategy = Closure.DELEGATE_FIRST,
+	Registration<Consumer> on(String namespace, key, @DelegatesTo(strategy = Closure.DELEGATE_FIRST,
 			value = ClosureEventConsumer.ReplyDecorator) Closure callback) {
-		_on(instance, groovyEnvironment[namespace], key, callback)
+		_on(groovyEnvironment[namespace], key, callback)
 	}
 
-	private Registration<Consumer> _on(instance, Reactor reactor, key, Closure callback) {
+	private Registration<Consumer> _on(Reactor reactor, key, Closure callback) {
 		if (key instanceof Selector)
 			reactor.on key, callback
 		else if (key instanceof Class)
@@ -156,11 +148,11 @@ class EventsApi {
 	}
 
 
-	boolean removeConsumers(instance = null, String ns = null, key) {
+	boolean removeConsumers(String ns = null, key) {
 		(ns ? groovyEnvironment[ns] : appReactor).consumerRegistry.unregister(key)
 	}
 
-	int countConsumers(instance = null, String ns = null, key) {
+	int countConsumers(String ns = null, key) {
 		(ns ? groovyEnvironment[ns] : appReactor).consumerRegistry.select(key).size()
 	}
 
@@ -183,7 +175,7 @@ class EventsApi {
 		}
 
 		@Override
-		void event(instance, key, data, String ns, Map params, Consumer<Event> _deferred,
+		void event(key, data, String ns, Map params, Consumer<Event> _deferred,
 		                     Consumer<Throwable> errorConsumer) {
 			if(!errorConsumer){
 				errorConsumer = new Consumer(){
@@ -197,7 +189,7 @@ class EventsApi {
 					}
 				}
 			}
-			super.event(instance, key, data, ns, params, new Consumer<Event>() {
+			super.event(key, data, ns, params, new Consumer<Event>() {
 				@Override
 				void accept(Event o) {
 					if (_deferred)

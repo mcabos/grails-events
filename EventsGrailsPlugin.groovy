@@ -73,11 +73,12 @@ Grails Events based on Reactor API
 			fixGroovyExtensions = application.config.grails.events.fixGroovyExtensions ?: true
 		}
 
+		grailsEvents(EventsApi)
+
 		if (!application.config.grails.events.gorm.disable) {
 			reactorGormBridge(GormReactorBridge)
 		}
 
-		instanceEventsApi(EventsApi)
 	}
 
 	def doWithDynamicMethods = { ctx ->

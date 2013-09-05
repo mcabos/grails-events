@@ -34,8 +34,6 @@ class TestService {
 	@Selector(reactor = 'someGormReactor')
 	void beforeValidate(Book b){
 		log.info 'test 1-before:'+b
-
-		assert b.title == 'lol'
 	}
 
 	@Selector ('test')
