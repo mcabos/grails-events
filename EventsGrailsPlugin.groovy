@@ -13,8 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+import org.codehaus.groovy.grails.commons.GrailsClass
+import org.codehaus.groovy.grails.commons.ServiceArtefactHandler
 import org.grails.plugins.events.reactor.api.EventsApi
-import org.grails.plugins.events.reactor.configuration.ConsumerBeanPostProcessor
+import org.grails.plugins.events.reactor.configuration.GrailsConsumerBeanPostAutoConfiguration
 import org.grails.plugins.events.reactor.configuration.EventsArtefactHandler
 import org.grails.plugins.events.reactor.configuration.ReactorConfigPostProcessor
 import org.grails.plugins.events.reactor.gorm.GormReactorBridge
@@ -68,7 +71,7 @@ Grails Events based on Reactor API
 	def artefacts = [EventsArtefactHandler]
 
 	def doWithSpring = {
-		reactorBeanPostProcessor(ConsumerBeanPostProcessor)
+		reactorBeanPostProcessor(GrailsConsumerBeanPostAutoConfiguration)
 		reactorConfigPostProcessor(ReactorConfigPostProcessor) {
 			fixGroovyExtensions = application.config.grails.events.fixGroovyExtensions ?: true
 		}
@@ -93,12 +96,18 @@ Grails Events based on Reactor API
 			def ctx = event.application.mainContext
 			if (application.isServiceClass(event.source)) {
 				synchronized (ctx) {
-					ctx.reactorConfigPostProcessor.scanServices(ctx, event.source)
+					ReactorConfigPostProcessor.scanServices(ctx, event.source)
 				}
 			} else if (application.isArtefactOfType(EventsArtefactHandler.TYPE, event.source)) {
 				synchronized (ctx) {
 					application.addArtefact(EventsArtefactHandler.TYPE, event.source)
 					ctx.reactorConfigPostProcessor.initContext(ctx)
+					def artefacts = application.getArtefacts(ServiceArtefactHandler.TYPE)
+					def classes = []
+					for (final GrailsClass artefact : artefacts) {
+						classes << artefact.clazz
+					}
+					ReactorConfigPostProcessor.scanServices(ctx, classes as Class[])
 					if (!application.config.grails.events.gorm.disable) {
 						ctx.reactorGormBridge.init()
 					}

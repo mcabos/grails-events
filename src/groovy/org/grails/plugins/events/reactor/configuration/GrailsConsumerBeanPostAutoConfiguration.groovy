@@ -9,23 +9,22 @@ import reactor.core.Reactor
 import reactor.function.Consumer
 import reactor.spring.annotation.ReplyTo
 import reactor.spring.annotation.Selector
-import reactor.spring.beans.factory.config.ConsumerBeanPostProcessor as PARENT
+import reactor.spring.beans.factory.config.ConsumerBeanAutoConfiguration
 
 import java.lang.reflect.Method
 /**
  * @author Stephane Maldini
  */
 @CompileStatic
-class ConsumerBeanPostProcessor extends PARENT{
+class GrailsConsumerBeanPostAutoConfiguration extends ConsumerBeanAutoConfiguration{
 
 	EventsApi eventsApi
 
-	ConsumerBeanPostProcessor() {
-		super()
+	GrailsConsumerBeanPostAutoConfiguration() {
 	}
 
 	@Override
-	Object initBean(Object bean, Set<Method> methods) {
+	void wireBean(bean, Set<Method> methods) {
 		//clean existing consumers for this service
 		Consumer consumer
 		Reactor reactor
@@ -40,20 +39,15 @@ class ConsumerBeanPostProcessor extends PARENT{
 
 			for (registration in reactor.consumerRegistry.select(selector.object)) {
 				consumer = registration.object
-				if ((consumer.getClass() == PARENT.ServiceConsumer &&
-						((PARENT.ServiceConsumer) consumer).handler.bean.getClass() == bean.getClass()) ||
-						(consumer.getClass() == PARENT.ReplyToServiceConsumer &&
-								((PARENT.ReplyToServiceConsumer) consumer).handler.bean.getClass()	== bean.getClass()))
+				if ((consumer.getClass() == ConsumerBeanAutoConfiguration.ServiceConsumer &&
+						((ConsumerBeanAutoConfiguration.ServiceConsumer) consumer).handler.bean.getClass() == bean.getClass()) ||
+						(consumer.getClass() == ConsumerBeanAutoConfiguration.ReplyToServiceConsumer &&
+								((ConsumerBeanAutoConfiguration.ReplyToServiceConsumer) consumer).handler.bean.getClass()	== bean.getClass()))
 					registration.cancel()
 			}
 		}
 
-		super.initBean(bean, methods)
-	}
-
-	@Autowired(required = false)
-	ConsumerBeanPostProcessor(ConversionService conversionService) {
-		super(conversionService)
+		super.wireBean(bean, methods)
 	}
 
 	@Override

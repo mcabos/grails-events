@@ -31,7 +31,14 @@ doWithReactor = {
 	}
 	reactor('someGormReactor'){
 		dispatcher = new SynchronousDispatcher()
-
 		ext 'gorm', true
+
+		stream{
+			consume{
+				println 'lol gorm'
+			}.when(Throwable){
+				println 'ex:'+it
+			}
+		}
 	}
 }

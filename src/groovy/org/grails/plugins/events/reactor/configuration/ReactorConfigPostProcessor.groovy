@@ -26,7 +26,7 @@ import org.codehaus.groovy.runtime.m12n.ExtensionModuleScanner
 import org.grails.plugins.events.reactor.api.EventsApi
 import org.grails.plugins.events.reactor.promise.ReactorPromiseFactory
 import org.springframework.beans.factory.BeanFactory
-import reactor.spring.beans.factory.config.ConsumerBeanPostProcessor as C
+import reactor.spring.beans.factory.config.ConsumerBeanAutoConfiguration as C
 import org.springframework.beans.BeansException
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory
@@ -65,29 +65,20 @@ class ReactorConfigPostProcessor implements Ordered, BeanFactoryPostProcessor {
 			def eventsApi = getBean(EventsApi)
 
 			//fix autowiring
-			def consumerBeanProcessor = getBean(ConsumerBeanPostProcessor)
+			def consumerBeanProcessor = getBean(GrailsConsumerBeanPostAutoConfiguration)
 			consumerBeanProcessor.eventsApi = eventsApi
 
 			reloadConfiguration grailsApplication, eventsApi
-
-			def artefacts = grailsApplication.getArtefacts(ServiceArtefactHandler.TYPE)
-			def classes = []
-			for (final GrailsClass artefact : artefacts) {
-				classes << artefact.clazz
-			}
-
-			scanServices(bf, classes as Class[])
-
 		}
 	}
 
-	void scanServices(BeanFactory bf, Class... classes) {
+	static void scanServices(BeanFactory bf, Class... classes) {
 		Set<Method> methods
-		def consumerBeanPostProcessor = bf.getBean(ConsumerBeanPostProcessor)
+		def consumerBeanPostProcessor = bf.getBean(GrailsConsumerBeanPostAutoConfiguration)
 		for (clazz in classes) {
-			methods = C.findHandlerMethods(clazz, ConsumerBeanPostProcessor.CONSUMER_METHOD_FILTER)
+			methods = C.findHandlerMethods(clazz, GrailsConsumerBeanPostAutoConfiguration.CONSUMER_METHOD_FILTER)
 			if (methods)
-				consumerBeanPostProcessor.initBean(bf.getBean(clazz), methods)
+				consumerBeanPostProcessor.wireBean(bf.getBean(clazz), methods)
 		}
 	}
 
@@ -250,6 +241,6 @@ class ReactorConfigPostProcessor implements Ordered, BeanFactoryPostProcessor {
 
 	@Override
 	int getOrder() {
-		LOWEST_PRECEDENCE - 1
+		LOWEST_PRECEDENCE
 	}
 }

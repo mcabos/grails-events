@@ -47,8 +47,9 @@ class GormReactorBridge implements ApplicationListener<ApplicationEvent> {
 			def topic = translateTable[applicationEvent.class]
 			if (topic) {
 				AbstractPersistenceEvent persistenceEvent = ((AbstractPersistenceEvent) applicationEvent)
+				def entity = persistenceEvent.entityObject ?: persistenceEvent.entityAccess?.entity
 				for (r in gormReactors) {
-						r.send(topic, persistenceEvent.entityObject ?: persistenceEvent.entityAccess?.entity) {
+						r.send(topic, entity) {
 							processCancel(persistenceEvent, it)
 						}
 				}
@@ -56,7 +57,7 @@ class GormReactorBridge implements ApplicationListener<ApplicationEvent> {
 		}
 	}
 
-	void processCancel(AbstractPersistenceEvent evt, returnValue) {
+	static void processCancel(AbstractPersistenceEvent evt, returnValue) {
 		if (evt != null && returnValue != null) {
 			if (!returnValue) {
 				evt.cancel()
