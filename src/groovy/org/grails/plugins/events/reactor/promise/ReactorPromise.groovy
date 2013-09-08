@@ -31,6 +31,8 @@ import java.util.concurrent.TimeoutException
 @CompileStatic
 class ReactorPromise<T> implements Promise<T> {
 
+		final static String PROMISE_DISPATCHER = 'grailsPromiseDispatcher'
+
     P<T> internalPromise
 
     ReactorPromise(P internalPromise) {
@@ -38,7 +40,7 @@ class ReactorPromise<T> implements Promise<T> {
     }
 
     ReactorPromise(Closure<T> callable, Environment environment = null) {
-        internalPromise = reactor.core.composable.Promise.<T> from(callable).env(environment)
+        internalPromise = reactor.core.composable.Promise.<T> from(callable).env(environment).dispatcher(PROMISE_DISPATCHER)
 		        .get().flush()
     }
 

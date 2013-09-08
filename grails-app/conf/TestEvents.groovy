@@ -14,19 +14,15 @@
  * limitations under the License.
  */
 
-
 import org.grails.plugins.events.reactor.api.EventsApi
 import reactor.event.dispatch.SynchronousDispatcher
 
-//includes = 'default'
 includes = ['default']
 
 doWithReactor = {
 	reactor(EventsApi.GRAILS_REACTOR){
-		stream{
-			consume{
-				println 'lol'
-			}
+		on('someTopic'){
+			reply 'test'
 		}
 	}
 	reactor('someGormReactor'){
@@ -35,9 +31,9 @@ doWithReactor = {
 
 		stream{
 			consume{
-				println 'lol gorm'
+				log.info "Some gorm event is flowing with data $it.data"
 			}.when(Throwable){
-				println 'ex:'+it
+				log.error "Ow snap!", it
 			}
 		}
 	}

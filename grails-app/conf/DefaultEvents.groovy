@@ -15,6 +15,7 @@
  */
 
 import org.grails.plugins.events.reactor.api.EventsApi
+import org.grails.plugins.events.reactor.promise.ReactorPromise
 import reactor.core.configuration.DispatcherType
 
 doWithReactor = {
@@ -25,7 +26,13 @@ doWithReactor = {
 				type = DispatcherType.RING_BUFFER
 				backlog = 512
 			}
+
+			dispatcher(ReactorPromise.PROMISE_DISPATCHER) {
+				type = DispatcherType.RING_BUFFER
+				backlog = 512
+			}
 	}
+
 	reactor(EventsApi.GRAILS_REACTOR){
 	}
 }
