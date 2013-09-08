@@ -3,7 +3,6 @@ package org.grails.plugins.events.reactor.gorm
 import groovy.transform.CompileStatic
 import org.grails.datastore.mapping.engine.event.*
 import org.grails.plugins.events.reactor.api.EventsApi
-import org.hibernate.event.PostDeleteEvent
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.ApplicationEvent
 import org.springframework.context.ApplicationListener

@@ -71,6 +71,7 @@ Grails Events based on Reactor API
 	def artefacts = [EventsArtefactHandler]
 
 	def doWithSpring = {
+		//load core Events beans
 		reactorBeanPostProcessor(GrailsConsumerBeanPostAutoConfiguration)
 		reactorConfigPostProcessor(ReactorConfigPostProcessor) {
 			fixGroovyExtensions = application.config.grails.events.fixGroovyExtensions ?: true
@@ -78,17 +79,18 @@ Grails Events based on Reactor API
 
 		instanceEventsApi(EventsApi)
 
-		if (!application.config.grails.events.gorm.disable) {
+		//load GORM Bridge
+		boolean isGormEventClass = false
+		try{
+			Class.forName('org.grails.datastore.mapping.engine.event.ValidationEvent')
+			isGormEventClass = true
+		}catch(ClassNotFoundException e){
+			log.info "GORM support disabled as datastore event classes look not present in the classpath"
+		}
+		if (isGormEventClass && !application.config.grails.events.gorm.disable){
 			reactorGormBridge(GormReactorBridge)
 		}
 
-	}
-
-	def doWithDynamicMethods = { ctx ->
-
-	}
-
-	def doWithApplicationContext = { ApplicationContext ctx ->
 	}
 
 	def onChange = { event ->
@@ -117,9 +119,4 @@ Grails Events based on Reactor API
 		}
 	}
 
-	def onConfigChange = { event ->
-	}
-
-	def onShutdown = { event ->
-	}
 }
