@@ -32,9 +32,9 @@ class TestService {
 	}
 
 	@Selector(reactor = 'someGormReactor')
-	void beforeValidate(Book b){
-		log.info 'test 1-before:'+b
-		throw new RuntimeException()
+	@ReplyTo
+	boolean beforeValidate(Book b){
+		false
 	}
 
 	@Selector ('test')

@@ -28,10 +28,12 @@ doWithReactor = {
 		}
 
 		if (grailsApplication.metadata['app.grails.version'].startsWith('2.3')) {
+
 			dispatcher(ReactorPromise.PROMISE_DISPATCHER) {
 				type = DispatcherType.RING_BUFFER
 				backlog = 512
 			}
+
 		}
 	}
 
