@@ -26,12 +26,13 @@ grails.project.dependency.resolution = {
 		grailsCentral()
 		mavenLocal()
 		mavenCentral()
+		mavenRepo "http://repo.springsource.org/libs-snapshot"
 		mavenRepo "http://repo.springsource.org/libs-milestone"
 	}
 
 	dependencies {
-		runtime 'org.projectreactor:reactor-groovy:1.0.0.BUILD-SNAPSHOT'
-		runtime ('org.projectreactor:reactor-spring:1.0.0.BUILD-SNAPSHOT'){
+		compile 'org.projectreactor:reactor-groovy:1.0.0.BUILD-SNAPSHOT'
+		compile ('org.projectreactor:reactor-spring:1.0.0.BUILD-SNAPSHOT'){
 			excludes 'spring-core','spring-expression','spring-beans','spring-context','spring-context-support'
 		}
 
